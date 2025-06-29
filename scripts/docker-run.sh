@@ -1,57 +1,76 @@
 #!/bin/bash
 
-# Docker run script for Structured Output Cookbook
+# Docker run script for url2md4ai
 # Usage: ./scripts/docker-run.sh [command] [args...]
 
 set -e
 
-# Check if OPENAI_API_KEY is set
-if [ -z "$OPENAI_API_KEY" ]; then
-    echo "❌ Error: OPENAI_API_KEY environment variable is not set"
-    echo "Please set your OpenAI API key:"
-    echo "export OPENAI_API_KEY='your-api-key-here'"
-    exit 1
-fi
-
-# Create data directory if it doesn't exist
-mkdir -p data config/schemas
+# Create output directory if it doesn't exist
+mkdir -p output
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🐳 Running Structured Output Cookbook with Docker${NC}"
-echo -e "${YELLOW}API Key:${NC} ${OPENAI_API_KEY:0:8}..."
+echo -e "${GREEN}🚀 Running url2md4ai with Docker${NC}"
 
 # Check if image exists, build if not
-if ! docker image inspect structured-output-cookbook:latest >/dev/null 2>&1; then
+if ! docker image inspect url2md4ai:latest >/dev/null 2>&1; then
     echo -e "${YELLOW}📦 Building Docker image...${NC}"
-    docker build -t structured-output-cookbook:latest .
+    docker build -t url2md4ai:latest .
 fi
+
+# Set default environment variables for LLM optimization
+export URL2MD_CLEAN_CONTENT="${URL2MD_CLEAN_CONTENT:-true}"
+export URL2MD_LLM_OPTIMIZED="${URL2MD_LLM_OPTIMIZED:-true}"
+export URL2MD_USE_TRAFILATURA="${URL2MD_USE_TRAFILATURA:-true}"
+export URL2MD_JAVASCRIPT="${URL2MD_JAVASCRIPT:-true}"
+export URL2MD_HEADLESS="${URL2MD_HEADLESS:-true}"
+export URL2MD_OUTPUT_DIR="/app/output"
+export URL2MD_LOG_LEVEL="${URL2MD_LOG_LEVEL:-INFO}"
+
+# Display configuration
+echo -e "${BLUE}🔧 Configuration:${NC}"
+echo -e "   Clean Content: ${URL2MD_CLEAN_CONTENT}"
+echo -e "   LLM Optimized: ${URL2MD_LLM_OPTIMIZED}"
+echo -e "   Use Trafilatura: ${URL2MD_USE_TRAFILATURA}"
+echo -e "   JavaScript: ${URL2MD_JAVASCRIPT}"
+echo ""
 
 # Run the container with the provided command
 if [ $# -eq 0 ]; then
     # No arguments provided, show help
     docker run --rm \
-        -e OPENAI_API_KEY="$OPENAI_API_KEY" \
-        -v "$(pwd)/data:/app/data" \
-        -v "$(pwd)/config:/app/config" \
+        -e URL2MD_CLEAN_CONTENT="$URL2MD_CLEAN_CONTENT" \
+        -e URL2MD_LLM_OPTIMIZED="$URL2MD_LLM_OPTIMIZED" \
+        -e URL2MD_USE_TRAFILATURA="$URL2MD_USE_TRAFILATURA" \
+        -e URL2MD_JAVASCRIPT="$URL2MD_JAVASCRIPT" \
+        -e URL2MD_HEADLESS="$URL2MD_HEADLESS" \
+        -e URL2MD_OUTPUT_DIR="$URL2MD_OUTPUT_DIR" \
+        -e URL2MD_LOG_LEVEL="$URL2MD_LOG_LEVEL" \
+        -v "$(pwd)/output:/app/output" \
         -v "$(pwd)/examples:/app/examples:ro" \
-        structured-output-cookbook:latest
+        url2md4ai:latest
 else
     # Run with provided arguments
-    echo -e "${GREEN}🚀 Running command:${NC} $*"
+    echo -e "${GREEN}🚀 Running command:${NC} url2md4ai $*"
     docker run --rm \
-        -e OPENAI_API_KEY="$OPENAI_API_KEY" \
-        -e OPENAI_MODEL="${OPENAI_MODEL:-gpt-4o-mini}" \
-        -e LOG_LEVEL="${LOG_LEVEL:-INFO}" \
-        -v "$(pwd)/data:/app/data" \
-        -v "$(pwd)/config:/app/config" \
+        -e URL2MD_CLEAN_CONTENT="$URL2MD_CLEAN_CONTENT" \
+        -e URL2MD_LLM_OPTIMIZED="$URL2MD_LLM_OPTIMIZED" \
+        -e URL2MD_USE_TRAFILATURA="$URL2MD_USE_TRAFILATURA" \
+        -e URL2MD_JAVASCRIPT="$URL2MD_JAVASCRIPT" \
+        -e URL2MD_HEADLESS="$URL2MD_HEADLESS" \
+        -e URL2MD_OUTPUT_DIR="$URL2MD_OUTPUT_DIR" \
+        -e URL2MD_LOG_LEVEL="$URL2MD_LOG_LEVEL" \
+        -e URL2MD_TIMEOUT="${URL2MD_TIMEOUT:-30}" \
+        -e URL2MD_MAX_RETRIES="${URL2MD_MAX_RETRIES:-3}" \
+        -v "$(pwd)/output:/app/output" \
         -v "$(pwd)/examples:/app/examples:ro" \
-        structured-output-cookbook:latest \
-        structured-output "$@"
+        url2md4ai:latest \
+        "$@"
 fi
 
-echo -e "${GREEN}✅ Done!${NC}" 
+echo -e "${GREEN}✅ Done! Check output/ directory for generated files.${NC}" 

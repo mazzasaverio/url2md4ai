@@ -1,7 +1,7 @@
 [project]
 name = "url2md4ai"
 dynamic = ["version"]
-description = "Convert web pages to LLM-optimized markdown from URLs with dynamic content rendering"
+description = "🚀 Lean Python tool for extracting clean, LLM-optimized markdown from web pages. Handles dynamic content with Playwright + Trafilatura for maximum information extraction efficiency."
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
@@ -14,7 +14,8 @@ license = { text = "MIT" }
 keywords = [
     "url", "markdown", "web-scraping", "llm", "content-extraction", 
     "html-to-markdown", "dynamic-rendering", "javascript-rendering",
-    "playwright", "web-automation", "ai-preprocessing"
+    "playwright", "trafilatura", "ai-preprocessing", "lean", "information-extraction",
+    "llm-optimization", "text-extraction", "web-automation"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

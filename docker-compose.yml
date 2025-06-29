@@ -1,37 +1,56 @@
 services:
-  structured-output-cookbook:
+  url2md4ai:
     build: .
-    image: structured-output-cookbook:latest
-    container_name: structured-output-cookbook
+    image: url2md4ai:latest
+    container_name: url2md4ai
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - MAX_TOKENS=${MAX_TOKENS:-4000}
-      - TEMPERATURE=${TEMPERATURE:-0.1}
+      # LLM-Optimized Extraction Settings
+      - URL2MD_CLEAN_CONTENT=${URL2MD_CLEAN_CONTENT:-true}
+      - URL2MD_LLM_OPTIMIZED=${URL2MD_LLM_OPTIMIZED:-true}
+      - URL2MD_USE_TRAFILATURA=${URL2MD_USE_TRAFILATURA:-true}
+      
+      # Content Filtering (Noise Removal)
+      - URL2MD_REMOVE_COOKIES=${URL2MD_REMOVE_COOKIES:-true}
+      - URL2MD_REMOVE_NAV=${URL2MD_REMOVE_NAV:-true}
+      - URL2MD_REMOVE_ADS=${URL2MD_REMOVE_ADS:-true}
+      - URL2MD_REMOVE_SOCIAL=${URL2MD_REMOVE_SOCIAL:-true}
+      
+      # JavaScript Rendering
+      - URL2MD_JAVASCRIPT=${URL2MD_JAVASCRIPT:-true}
+      - URL2MD_HEADLESS=${URL2MD_HEADLESS:-true}
+      - URL2MD_PAGE_TIMEOUT=${URL2MD_PAGE_TIMEOUT:-2000}
+      
+      # Output Settings
+      - URL2MD_OUTPUT_DIR=/app/output
+      - URL2MD_USE_HASH_FILENAMES=${URL2MD_USE_HASH_FILENAMES:-true}
+      
+      # Performance & Reliability
+      - URL2MD_TIMEOUT=${URL2MD_TIMEOUT:-30}
+      - URL2MD_MAX_RETRIES=${URL2MD_MAX_RETRIES:-3}
+      - URL2MD_USER_AGENT=${URL2MD_USER_AGENT:-url2md4ai-docker/1.0}
+      - URL2MD_LOG_LEVEL=${URL2MD_LOG_LEVEL:-INFO}
     volumes:
-      # Mount data directory for output files
-      - ./data:/app/data
-      # Mount config directory for custom schemas
-      - ./config:/app/config
-      # Mount examples directory for input files
+      # Mount output directory for markdown files
+      - ./output:/app/output
+      # Mount examples directory (optional, for testing)
       - ./examples:/app/examples:ro
     working_dir: /app
-    # Override default command - you can specify commands when running
-    # docker-compose run --rm structured-output-cookbook list-templates
-    command: ["structured-output", "--help"]
+    # Default help command - override when running specific conversions
+    command: ["url2md4ai", "--help"]
     
   # Development service with additional mounts
   dev:
     build: .
-    image: structured-output-cookbook:dev
-    container_name: structured-output-cookbook-dev
+    image: url2md4ai:dev
+    container_name: url2md4ai-dev
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
-      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
-      - MAX_TOKENS=${MAX_TOKENS:-4000}
-      - TEMPERATURE=${TEMPERATURE:-0.1}
+      - URL2MD_CLEAN_CONTENT=true
+      - URL2MD_LLM_OPTIMIZED=true
+      - URL2MD_USE_TRAFILATURA=true
+      - URL2MD_JAVASCRIPT=true
+      - URL2MD_HEADLESS=true
+      - URL2MD_OUTPUT_DIR=/app/output
+      - URL2MD_LOG_LEVEL=DEBUG
     volumes:
       # Full project mount for development
       - .:/app
@@ -43,7 +62,5 @@ services:
 
 # Define volumes for data persistence
 volumes:
-  data:
-    driver: local
-  config:
+  output:
     driver: local 

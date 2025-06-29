@@ -1,46 +1,55 @@
 #!/bin/bash
 
-# Docker development environment script
+# Docker development environment script for url2md4ai
 # Usage: ./scripts/docker-dev.sh
 
 set -e
 
-# Check if OPENAI_API_KEY is set
-if [ -z "$OPENAI_API_KEY" ]; then
-    echo "❌ Error: OPENAI_API_KEY environment variable is not set"
-    echo "Please set your OpenAI API key:"
-    echo "export OPENAI_API_KEY='your-api-key-here'"
-    exit 1
-fi
-
 # Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🛠️  Starting Structured Output Cookbook Development Environment${NC}"
-echo -e "${YELLOW}API Key:${NC} ${OPENAI_API_KEY:0:8}..."
+echo -e "${GREEN}🛠️  Starting url2md4ai Development Environment${NC}"
 
 # Build image if it doesn't exist
-if ! docker image inspect structured-output-cookbook:latest >/dev/null 2>&1; then
+if ! docker image inspect url2md4ai:latest >/dev/null 2>&1; then
     echo -e "${YELLOW}📦 Building Docker image...${NC}"
-    docker build -t structured-output-cookbook:latest .
+    docker build -t url2md4ai:latest .
 fi
+
+# Set development environment variables
+export URL2MD_LOG_LEVEL=DEBUG
+export URL2MD_CLEAN_CONTENT=true
+export URL2MD_LLM_OPTIMIZED=true
+export URL2MD_USE_TRAFILATURA=true
+export URL2MD_JAVASCRIPT=true
+
+echo -e "${BLUE}🔧 Development Configuration:${NC}"
+echo -e "   Log Level: DEBUG"
+echo -e "   Clean Content: ${URL2MD_CLEAN_CONTENT}"
+echo -e "   LLM Optimized: ${URL2MD_LLM_OPTIMIZED}"
+echo ""
 
 # Run development container
 echo -e "${GREEN}🚀 Starting interactive development shell...${NC}"
 echo -e "${YELLOW}💡 You can now run commands like:${NC}"
-echo "   uv run structured-output list-templates"
+echo "   uv run url2md4ai convert \"https://example.com\" --show-metadata"
+echo "   uv run url2md4ai batch \"https://site1.com\" \"https://site2.com\""
+echo "   uv run url2md4ai test-extraction \"https://example.com\" --method both"
 echo "   uv run pytest"
 echo "   uv run ruff check ."
 echo ""
 
 docker run -it --rm \
-    -e OPENAI_API_KEY="$OPENAI_API_KEY" \
-    -e OPENAI_MODEL="${OPENAI_MODEL:-gpt-4o-mini}" \
-    -e LOG_LEVEL="${LOG_LEVEL:-DEBUG}" \
+    -e URL2MD_CLEAN_CONTENT="$URL2MD_CLEAN_CONTENT" \
+    -e URL2MD_LLM_OPTIMIZED="$URL2MD_LLM_OPTIMIZED" \
+    -e URL2MD_USE_TRAFILATURA="$URL2MD_USE_TRAFILATURA" \
+    -e URL2MD_JAVASCRIPT="$URL2MD_JAVASCRIPT" \
+    -e URL2MD_LOG_LEVEL="$URL2MD_LOG_LEVEL" \
     -v "$(pwd):/app" \
     -v /app/.venv \
     --workdir /app \
-    structured-output-cookbook:latest \
+    url2md4ai:latest \
     /bin/bash 

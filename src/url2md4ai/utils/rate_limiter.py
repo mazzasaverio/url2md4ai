@@ -4,7 +4,7 @@ import hashlib
 import threading
 import time
 from collections import deque
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from .logger import get_logger
 

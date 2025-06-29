@@ -1,7 +1,6 @@
 """Test cases for url2md4ai configuration."""
 
 import os
-import pytest
 from unittest.mock import patch
 
 from url2md4ai.config import Config
@@ -13,7 +12,7 @@ class TestConfig:
     def test_default_config(self):
         """Test default configuration values."""
         config = Config()
-        
+
         assert config.output_dir == "output"
         assert config.use_hash_filenames is True
         assert config.timeout == 30
@@ -27,7 +26,7 @@ class TestConfig:
         """Test config from environment with default values."""
         with patch.dict(os.environ, {}, clear=False):
             config = Config.from_env()
-            
+
             assert config.output_dir == "output"
             assert config.timeout == 30
             assert config.javascript_enabled is True
@@ -41,10 +40,10 @@ class TestConfig:
             "URL2MD_CLEAN_CONTENT": "false",
             "URL2MD_USE_TRAFILATURA": "false",
         }
-        
+
         with patch.dict(os.environ, env_vars, clear=False):
             config = Config.from_env()
-            
+
             assert config.output_dir == "/custom/output"
             assert config.timeout == 60
             assert config.javascript_enabled is False
@@ -53,14 +52,10 @@ class TestConfig:
 
     def test_to_dict(self):
         """Test config to dictionary conversion."""
-        config = Config(
-            output_dir="/test",
-            timeout=45,
-            javascript_enabled=False
-        )
-        
+        config = Config(output_dir="/test", timeout=45, javascript_enabled=False)
+
         config_dict = config.to_dict()
-        
+
         assert isinstance(config_dict, dict)
         assert config_dict["output_dir"] == "/test"
         assert config_dict["timeout"] == 45
@@ -74,7 +69,7 @@ class TestConfig:
         with patch.dict(os.environ, {"URL2MD_JAVASCRIPT": "true"}, clear=False):
             config = Config.from_env()
             assert config.javascript_enabled is True
-        
+
         # Test false values
         with patch.dict(os.environ, {"URL2MD_JAVASCRIPT": "false"}, clear=False):
             config = Config.from_env()
@@ -82,13 +77,17 @@ class TestConfig:
 
     def test_numeric_env_parsing(self):
         """Test numeric environment variable parsing."""
-        with patch.dict(os.environ, {
-            "URL2MD_TIMEOUT": "120",
-            "URL2MD_MAX_RETRIES": "5",
-            "URL2MD_PAGE_TIMEOUT": "3000",
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "URL2MD_TIMEOUT": "120",
+                "URL2MD_MAX_RETRIES": "5",
+                "URL2MD_PAGE_TIMEOUT": "3000",
+            },
+            clear=False,
+        ):
             config = Config.from_env()
-            
+
             assert config.timeout == 120
             assert config.max_retries == 5
             assert config.page_wait_timeout == 3000
@@ -96,7 +95,7 @@ class TestConfig:
     def test_content_filtering_config(self):
         """Test content filtering configuration options."""
         config = Config()
-        
+
         # Test defaults
         assert config.remove_cookie_banners is True
         assert config.remove_navigation is True
@@ -107,7 +106,7 @@ class TestConfig:
     def test_trafilatura_config(self):
         """Test trafilatura-specific configuration options."""
         config = Config()
-        
+
         # Test trafilatura defaults
         assert config.favor_precision is True
         assert config.favor_recall is False

@@ -1,17 +1,16 @@
 """Command line interface for url2md4ai."""
 
 import asyncio
-from typing import List
 import json
 
 import click
+from loguru import logger
 
 from .config import Config
-from .converter import URLToMarkdownConverter, URLHasher
-from .utils import get_logger, setup_logger
+from .converter import ConversionResult, URLHasher, URLToMarkdownConverter
 
 
-def print_result_info(result, show_metadata: bool = False):
+def print_result_info(result: ConversionResult, show_metadata: bool = False) -> None:
     """Print conversion result information."""
     if result.success:
         click.echo(f"✅ Successfully converted: {result.url}")
@@ -22,7 +21,7 @@ def print_result_info(result, show_metadata: bool = False):
         click.echo(f"   📊 Size: {result.file_size:,} characters")
         click.echo(f"   ⚡ Method: {result.extraction_method}")
         click.echo(f"   ⏱️  Time: {result.processing_time:.2f}s")
-        
+
         if show_metadata and result.metadata:
             click.echo(f"   🔍 Metadata: {json.dumps(result.metadata, indent=2)}")
     else:
@@ -31,355 +30,341 @@ def print_result_info(result, show_metadata: bool = False):
 
 
 @click.group()
-@click.option('--config-file', help='Path to configuration file')
-@click.option('--output-dir', help='Output directory')
-@click.option('--no-js', is_flag=True, help='Disable JavaScript rendering globally')
-@click.option('--no-clean', is_flag=True, help='Disable content cleaning globally')
-@click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
+@click.option(
+    "--config-file",
+    type=click.Path(exists=True),
+    help="Path to configuration file",
+)
+@click.option(
+    "--output-dir",
+    type=click.Path(),
+    help="Output directory for markdown files",
+)
+@click.option("--no-js", is_flag=True, help="Disable JavaScript rendering")
+@click.option("--no-clean", is_flag=True, help="Disable content cleaning")
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
 @click.pass_context
-def cli(ctx, config_file, output_dir, no_js, no_clean, verbose):
+def cli(
+    ctx: click.Context,
+    config_file: str | None,  # noqa: ARG001
+    output_dir: str | None,
+    no_js: bool,
+    no_clean: bool,
+    verbose: bool,
+) -> None:
     """URL2MD4AI - Convert web pages to LLM-optimized markdown."""
     config = Config.from_env()
-    
-    # Override config with CLI options
+
+    # Apply CLI overrides
     if output_dir:
-        config.output_dir = output_dir
+        config.output_dir = str(output_dir)
     if no_js:
         config.javascript_enabled = False
     if no_clean:
         config.clean_content = False
         config.llm_optimized = False
+
     if verbose:
-        config.log_level = "DEBUG"
-    
+        logger.remove()
+        logger.add(
+            lambda msg: click.echo(msg, err=True),
+            level="DEBUG",
+            format="<level>{level}</level> | {message}",
+        )
+
     ctx.ensure_object(dict)
     ctx.obj = config
 
 
 @click.command()
-@click.argument('url')
-@click.option('--output', '-o', help='Output file path')
-@click.option('--output-dir', help='Output directory (overrides config)')
-@click.option('--no-js', is_flag=True, help='Disable JavaScript rendering for this URL')
-@click.option('--force-js', is_flag=True, help='Force JavaScript rendering for this URL')
-@click.option('--no-clean', is_flag=True, help='Disable content cleaning for this URL')
-@click.option('--raw', is_flag=True, help='Raw extraction without LLM optimization')
-@click.option('--show-metadata', is_flag=True, help='Display conversion metadata')
-@click.option('--preview', is_flag=True, help='Preview without saving to file')
+@click.argument("url")
+@click.option("--output", "-o", help="Output filename (optional)")
+@click.option("--show-metadata", is_flag=True, help="Show conversion metadata")
+@click.option("--show-content", is_flag=True, help="Show extracted content")
+@click.option("--js/--no-js", default=None, help="Enable/disable JavaScript rendering")
+@click.option("--clean/--raw", default=None, help="Enable/disable content cleaning")
 @click.pass_context
-def convert_cmd(ctx, url: str, output: str, output_dir: str, no_js: bool, force_js: bool, 
-                no_clean: bool, raw: bool, show_metadata: bool, preview: bool):
+def convert(
+    ctx: click.Context,
+    url: str,
+    output: str | None,
+    show_metadata: bool,
+    show_content: bool,
+    js: bool | None,
+    clean: bool | None,
+) -> None:
     """Convert a single URL to markdown."""
-    
-    async def async_convert():
+
+    async def async_convert() -> None:
         config = ctx.obj
-        
-        # Override config for this conversion
-        if output_dir:
-            config.output_dir = output_dir
-        if no_clean or raw:
-            config.clean_content = False
-            config.llm_optimized = False
-        if raw:
-            config.use_trafilatura = False
-        
-        # Determine JavaScript usage
-        use_javascript = None
-        if force_js:
-            use_javascript = True
-        elif no_js:
-            use_javascript = False
-        
         converter = URLToMarkdownConverter(config)
-        
-        # Convert without saving if preview mode
-        output_path = None if preview else output
-        
+
+        # Determine settings
+        use_js = js if js is not None else config.javascript_enabled
+        use_traff = clean if clean is not None else config.use_trafilatura
+
         try:
+            if show_metadata:
+                click.echo("🔄 Converting URL to markdown...")
+
             result = await converter.convert_url(
                 url,
-                output_path=output_path,
-                use_javascript=use_javascript,
-                use_trafilatura=not raw
+                output_path=output,
+                use_javascript=use_js,
+                use_trafilatura=use_traff,
             )
-            
-            print_result_info(result, show_metadata)
-            
-            if preview and result.success:
-                click.echo("\n📄 Content Preview (first 500 chars):")
-                click.echo("─" * 60)
-                preview_text = result.markdown[:500]
-                if len(result.markdown) > 500:
-                    preview_text += "..."
-                click.echo(preview_text)
-                click.echo("─" * 60)
-            
+
+            if result.success:
+                if show_metadata:
+                    click.echo("✅ Conversion successful!")
+                    click.echo(f"📁 File: {result.output_path}")
+                    click.echo(f"📊 Size: {result.file_size} chars")
+                    click.echo(f"⏱️  Time: {result.processing_time:.2f}s")
+                    click.echo(f"🔧 Method: {result.extraction_method}")
+
+                if show_content and result.markdown:
+                    click.echo("\n" + "=" * 50)
+                    click.echo("EXTRACTED CONTENT:")
+                    click.echo("=" * 50)
+                    click.echo(result.markdown)
+
+                if not show_metadata and not show_content:
+                    click.echo(f"✅ Converted: {result.output_path}")
+            else:
+                click.echo(f"❌ Conversion failed: {result.error}")
+                raise click.Abort from None
+
         except Exception as e:
             click.echo(f"❌ Conversion failed: {e}")
-            raise click.Abort()
-    
+            raise click.Abort from e
+
     return asyncio.run(async_convert())
 
 
 @click.command()
-@click.argument('urls', nargs=-1, required=True)
-@click.option('--output-dir', help='Output directory (overrides config)')
-@click.option('--concurrency', '-c', default=3, help='Number of concurrent conversions')
-@click.option('--no-js', is_flag=True, help='Disable JavaScript rendering for all URLs')
-@click.option('--force-js', is_flag=True, help='Force JavaScript rendering for all URLs')
-@click.option('--no-clean', is_flag=True, help='Disable content cleaning for all URLs')
-@click.option('--raw', is_flag=True, help='Raw extraction without LLM optimization')
-@click.option('--show-metadata', is_flag=True, help='Display conversion metadata')
-@click.option('--continue-on-error', is_flag=True, help='Continue processing on individual failures')
+@click.argument("urls", nargs=-1, required=True)
+@click.option("--concurrency", "-c", default=3, help="Number of parallel conversions")
+@click.option(
+    "--continue-on-error",
+    is_flag=True,
+    help="Continue processing even if some URLs fail",
+)
+@click.option("--show-progress", is_flag=True, help="Show progress information")
+@click.option("--js/--no-js", default=None, help="Enable/disable JavaScript rendering")
+@click.option("--clean/--raw", default=None, help="Enable/disable content cleaning")
 @click.pass_context
-def batch_cmd(ctx, urls: List[str], output_dir: str, concurrency: int, no_js: bool, 
-              force_js: bool, no_clean: bool, raw: bool, show_metadata: bool, continue_on_error: bool):
+def batch(
+    ctx: click.Context,
+    urls: list[str],
+    concurrency: int,
+    continue_on_error: bool,
+    show_progress: bool,
+    js: bool | None,
+    clean: bool | None,
+) -> None:
     """Convert multiple URLs to markdown with parallel processing."""
-    
-    async def async_batch():
+
+    async def async_batch() -> None:
         config = ctx.obj
-        
-        # Override config for batch conversion
-        if output_dir:
-            config.output_dir = output_dir
-        if no_clean or raw:
-            config.clean_content = False
-            config.llm_optimized = False
-        if raw:
-            config.use_trafilatura = False
-        
-        # Determine JavaScript usage
-        use_javascript = None
-        if force_js:
-            use_javascript = True
-        elif no_js:
-            use_javascript = False
-        
         converter = URLToMarkdownConverter(config)
-        
-        click.echo(f"🚀 Starting batch conversion of {len(urls)} URLs with {concurrency} concurrent workers")
-        
+
+        # Determine settings
+        use_js = js if js is not None else config.javascript_enabled
+        use_traff = clean if clean is not None else config.use_trafilatura
+
+        if show_progress:
+            click.echo(f"🚀 Processing {len(urls)} URLs with {concurrency} workers...")
+
         # Create semaphore for concurrency control
         semaphore = asyncio.Semaphore(concurrency)
-        
-        async def convert_single(url: str):
+
+        async def convert_single(url: str) -> object | None:
             async with semaphore:
                 try:
-                    result = await converter.convert_url(
+                    return await converter.convert_url(
                         url,
-                        use_javascript=use_javascript,
-                        use_trafilatura=not raw
+                        use_javascript=use_js,
+                        use_trafilatura=use_traff,
                     )
-                    return result
                 except Exception as e:
                     if continue_on_error:
-                        click.echo(f"⚠️  Error processing {url}: {e}")
+                        if show_progress:
+                            click.echo(f"⚠️  Failed {url}: {e}")
                         return None
                     raise
-        
+
         # Process all URLs concurrently
         tasks = [convert_single(url) for url in urls]
-        
-        if continue_on_error:
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-        else:
-            results = await asyncio.gather(*tasks)
-        
-        # Display results
-        successful = 0
-        failed = 0
-        
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                click.echo(f"❌ {urls[i]}: {result}")
-                failed += 1
-            elif result is None:
-                # None returned from convert_single when continue_on_error is True
-                failed += 1
-            elif hasattr(result, 'success') and result.success:
-                # Valid ConversionResult object
-                if show_metadata:
-                    print_result_info(result, True)
-                else:
-                    click.echo(f"✅ {result.filename} <- {result.url}")
-                successful += 1
-            else:
-                click.echo(f"❌ {urls[i]}: {getattr(result, 'error', 'Unknown error')}")
-                failed += 1
-        
-        click.echo(f"\n📊 Batch conversion completed:")
-        click.echo(f"   ✅ Successful: {successful}")
-        click.echo(f"   ❌ Failed: {failed}")
-        click.echo(f"   📁 Output directory: {config.output_dir}")
-    
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Report results
+        successful = sum(1 for r in results if r and getattr(r, "success", False))
+        failed = len(urls) - successful
+
+        if show_progress:
+            click.echo(f"✅ Successfully converted: {successful}")
+            if failed > 0:
+                click.echo(f"❌ Failed: {failed}")
+
+        if failed > 0 and not continue_on_error:
+            raise click.Abort from None
+
     return asyncio.run(async_batch())
 
 
 @click.command()
-@click.argument('url')
-@click.option('--show-content', is_flag=True, help='Show content preview')
-@click.pass_context  
-def preview_cmd(ctx, url: str, show_content: bool):
+@click.argument("url")
+@click.option("--show-content", is_flag=True, help="Show extracted content")
+@click.option("--show-metadata", is_flag=True, help="Show conversion metadata")
+@click.option("--js/--no-js", default=None, help="Enable/disable JavaScript rendering")
+@click.option("--clean/--raw", default=None, help="Enable/disable content cleaning")
+@click.pass_context
+def preview(
+    ctx: click.Context,
+    url: str,
+    show_content: bool,
+    show_metadata: bool,
+    js: bool | None,
+    clean: bool | None,
+) -> None:
     """Preview URL conversion without saving to file."""
-    
-    async def async_preview():
+
+    async def async_preview() -> None:
         config = ctx.obj
         converter = URLToMarkdownConverter(config)
-        
+
+        # Determine settings
+        use_js = js if js is not None else config.javascript_enabled
+        use_traff = clean if clean is not None else config.use_trafilatura
+
         try:
-            result = await converter.convert_url(url, output_path=None)
-            
+            click.echo("🔍 Previewing URL conversion...")
+
+            # Convert without saving (output_path=None)
+            result = await converter.convert_url(
+                url,
+                output_path=None,
+                use_javascript=use_js,
+                use_trafilatura=use_traff,
+            )
+
             if result.success:
-                click.echo(f"✅ Preview for: {result.url}")
-                click.echo(f"   📄 Title: {result.title}")
-                click.echo(f"   📊 Size: {result.file_size:,} characters")
-                click.echo(f"   ⚡ Method: {result.extraction_method}")
-                click.echo(f"   📁 Would save as: {result.filename}")
-                
-                if show_content:
-                    click.echo("\n📄 Content Preview:")
-                    click.echo("─" * 60)
-                    preview_text = result.markdown[:1000]
-                    if len(result.markdown) > 1000:
-                        preview_text += f"\n... ({len(result.markdown) - 1000} more characters)"
-                    click.echo(preview_text)
-                    click.echo("─" * 60)
+                if show_metadata:
+                    click.echo("📊 Metadata:")
+                    click.echo(f"  Title: {result.title}")
+                    click.echo(f"  Size: {result.file_size} chars")
+                    click.echo(f"  Method: {result.extraction_method}")
+                    click.echo(f"  Time: {result.processing_time:.2f}s")
+
+                if show_content or not show_metadata:
+                    click.echo("\n" + "=" * 50)
+                    click.echo("PREVIEW CONTENT:")
+                    click.echo("=" * 50)
+                    content = (
+                        result.markdown[:2000] + "..."
+                        if len(result.markdown) > 2000
+                        else result.markdown
+                    )
+                    click.echo(content)
             else:
                 click.echo(f"❌ Preview failed: {result.error}")
-                
+                raise click.Abort from None
+
         except Exception as e:
             click.echo(f"❌ Preview failed: {e}")
-            raise click.Abort()
-    
+            raise click.Abort from e
+
     return asyncio.run(async_preview())
 
 
 @click.command()
-@click.argument('url')
-@click.option('--method', type=click.Choice(['trafilatura', 'beautifulsoup', 'both']), default='both')
-@click.option('--show-diff', is_flag=True, help='Show difference between methods')
+@click.argument("url")
+@click.option(
+    "--method",
+    type=click.Choice(["js", "nojs", "both"]),
+    default="both",
+    help="Test specific extraction method",
+)
 @click.pass_context
-def test_extraction_cmd(ctx, url: str, method: str, show_diff: bool):
+def test_extraction(ctx: click.Context, url: str, method: str) -> None:
     """Test different extraction methods on a URL."""
-    
-    async def async_test():
+
+    async def async_test() -> None:
         config = ctx.obj
         converter = URLToMarkdownConverter(config)
-        
-        click.echo(f"🧪 Testing extraction methods for: {url}")
-        
-        results = {}
-        
-        if method in ['trafilatura', 'both']:
-            click.echo("\n🔍 Testing Trafilatura...")
-            result = await converter.convert_url(url, output_path=None, use_trafilatura=True)
-            if result.success:
-                results['trafilatura'] = result
-                click.echo(f"   ✅ Size: {result.file_size:,} chars")
-            else:
-                click.echo(f"   ❌ Failed: {result.error}")
-        
-        if method in ['beautifulsoup', 'both']:
-            click.echo("\n🔍 Testing BeautifulSoup...")
-            result = await converter.convert_url(url, output_path=None, use_trafilatura=False)
-            if result.success:
-                results['beautifulsoup'] = result
-                click.echo(f"   ✅ Size: {result.file_size:,} chars")
-            else:
-                click.echo(f"   ❌ Failed: {result.error}")
-        
-        if show_diff and len(results) == 2:
-            click.echo("\n📊 Comparison:")
-            traff_result = results['trafilatura']
-            bs_result = results['beautifulsoup']
-            
-            size_diff = traff_result.file_size - bs_result.file_size
-            size_percent = (size_diff / bs_result.file_size * 100) if bs_result.file_size > 0 else 0
-            
-            click.echo(f"   Trafilatura: {traff_result.file_size:,} chars")
-            click.echo(f"   BeautifulSoup: {bs_result.file_size:,} chars")
-            click.echo(f"   Difference: {size_diff:+,} chars ({size_percent:+.1f}%)")
-            
-            if size_percent < -50:
-                click.echo("   🎯 Trafilatura extracted significantly cleaner content!")
-            elif size_percent > 50:
-                click.echo("   ⚠️  Trafilatura may have missed some content")
-            else:
-                click.echo("   ✅ Both methods produced similar amounts of content")
-    
+
+        methods = []
+        if method in ["js", "both"]:
+            methods.append(("JavaScript", True))
+        if method in ["nojs", "both"]:
+            methods.append(("No-JavaScript", False))
+
+        for method_name, use_js in methods:
+            try:
+                click.echo(f"\n🧪 Testing {method_name} method...")
+                start_time = asyncio.get_event_loop().time()
+
+                result = await converter.convert_url(
+                    url,
+                    output_path=None,
+                    use_javascript=use_js,
+                )
+
+                end_time = asyncio.get_event_loop().time()
+                processing_time = end_time - start_time
+
+                if result.success:
+                    click.echo(f"✅ {method_name}: {result.file_size} chars")
+                    click.echo(f"⏱️  Time: {processing_time:.2f}s")
+                    click.echo(f"🔧 Method: {result.extraction_method}")
+                else:
+                    click.echo(f"❌ {method_name} failed: {result.error}")
+
+            except Exception as e:
+                click.echo(f"❌ {method_name} failed: {e}")
+
     return asyncio.run(async_test())
 
 
 @click.command()
-@click.argument('url')
-def hash_cmd(url: str):
+@click.argument("url")
+def hash_url(url: str) -> None:
     """Generate hash filename for a URL."""
     hash_value = URLHasher.generate_hash(url)
     filename = URLHasher.generate_filename(url)
-    
     click.echo(f"URL: {url}")
     click.echo(f"Hash: {hash_value}")
     click.echo(f"Filename: {filename}")
 
 
 @click.command()
-@click.option('--format', 'output_format', type=click.Choice(['text', 'json']), default='text')
 @click.pass_context
-def config_info_cmd(ctx, output_format: str):
+def config_info(ctx: click.Context) -> None:
     """Show current configuration."""
     config = ctx.obj
-    
-    if output_format == 'json':
-        click.echo(json.dumps(config.to_dict(), indent=2))
-    else:
-        click.echo("🔧 Current Configuration:")
-        click.echo("─" * 40)
-        
-        # Group settings by category
-        sections = {
-            'Output Settings': [
-                ('output_dir', 'Output Directory'),
-                ('use_hash_filenames', 'Use Hash Filenames'),
-            ],
-            'Network Settings': [
-                ('timeout', 'Timeout (seconds)'),
-                ('user_agent', 'User Agent'),
-                ('max_retries', 'Max Retries'),
-            ],
-            'Content Extraction': [
-                ('javascript_enabled', 'JavaScript Enabled'),
-                ('use_trafilatura', 'Use Trafilatura'),
-                ('clean_content', 'Clean Content'),
-                ('llm_optimized', 'LLM Optimized'),
-            ],
-            'Content Filtering': [
-                ('remove_cookie_banners', 'Remove Cookie Banners'),
-                ('remove_navigation', 'Remove Navigation'),
-                ('remove_ads', 'Remove Ads'),
-                ('remove_social_media', 'Remove Social Media'),
-            ],
-        }
-        
-        for section, settings in sections.items():
-            click.echo(f"\n{section}:")
-            for key, label in settings:
-                value = getattr(config, key)
-                click.echo(f"  {label}: {value}")
+    click.echo("🔧 Current Configuration:")
+    click.echo(f"  Output Dir: {config.output_dir}")
+    click.echo(f"  JavaScript: {config.javascript_enabled}")
+    click.echo(f"  Clean Content: {config.clean_content}")
+    click.echo(f"  LLM Optimized: {config.llm_optimized}")
+    click.echo(f"  Use Trafilatura: {config.use_trafilatura}")
+    click.echo(f"  Request Timeout: {config.timeout}s")
+    click.echo(f"  User Agent: {config.user_agent}")
 
 
 # Add commands to CLI group
-cli.add_command(convert_cmd, name='convert')
-cli.add_command(batch_cmd, name='batch')
-cli.add_command(preview_cmd, name='preview')
-cli.add_command(test_extraction_cmd, name='test-extraction')
-cli.add_command(hash_cmd, name='hash')
-cli.add_command(config_info_cmd, name='config-info')
+cli.add_command(convert)
+cli.add_command(batch)
+cli.add_command(preview)
+cli.add_command(test_extraction)
+cli.add_command(hash_url, name="hash")
+cli.add_command(config_info)
 
 
-def main():
-    """Main entry point for the CLI."""
+def main() -> None:
+    """Entry point for the CLI."""
     cli()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

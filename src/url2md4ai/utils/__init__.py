@@ -1,18 +1,25 @@
-"""Utility modules for url2md4ai."""
+"""Utility functions and classes for url2md4ai."""
+
+from typing import TYPE_CHECKING
 
 from .logger import get_logger, setup_logger
-from .rate_limiter import RateLimiter, SimpleCache
+from .rate_limiter import RateLimiter
+
+if TYPE_CHECKING:
+    from ..converter import URLHasher
+
 
 # URLHasher is imported from converter to avoid circular imports
-def URLHasher():
+def url_hasher() -> type["URLHasher"]:
     """URLHasher is available in converter module."""
     from ..converter import URLHasher as _URLHasher
+
     return _URLHasher
+
 
 __all__ = [
     "RateLimiter",
-    "SimpleCache", 
     "get_logger",
     "setup_logger",
-    "URLHasher",
+    "url_hasher",
 ]

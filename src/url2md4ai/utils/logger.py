@@ -1,15 +1,19 @@
 """Logging utilities for url2md4ai."""
 
 import sys
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
+if TYPE_CHECKING:
+    from ..config import Config
 
-def setup_logger(config) -> None:
+
+def setup_logger(config: "Config") -> None:
     """Setup loguru logger with configuration."""
     # Remove default handler
     logger.remove()
-    
+
     # Add console handler with appropriate level and format
     logger.add(
         sys.stdout,
@@ -19,7 +23,7 @@ def setup_logger(config) -> None:
     )
 
 
-def get_logger(name: str):
+def get_logger(name: str):  # type: ignore[no-untyped-def]
     """Get logger instance."""
     return logger.bind(name=name)
 

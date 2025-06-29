@@ -1,0 +1,49 @@
+services:
+  structured-output-cookbook:
+    build: .
+    image: structured-output-cookbook:latest
+    container_name: structured-output-cookbook
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MAX_TOKENS=${MAX_TOKENS:-4000}
+      - TEMPERATURE=${TEMPERATURE:-0.1}
+    volumes:
+      # Mount data directory for output files
+      - ./data:/app/data
+      # Mount config directory for custom schemas
+      - ./config:/app/config
+      # Mount examples directory for input files
+      - ./examples:/app/examples:ro
+    working_dir: /app
+    # Override default command - you can specify commands when running
+    # docker-compose run --rm structured-output-cookbook list-templates
+    command: ["structured-output", "--help"]
+    
+  # Development service with additional mounts
+  dev:
+    build: .
+    image: structured-output-cookbook:dev
+    container_name: structured-output-cookbook-dev
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
+      - MAX_TOKENS=${MAX_TOKENS:-4000}
+      - TEMPERATURE=${TEMPERATURE:-0.1}
+    volumes:
+      # Full project mount for development
+      - .:/app
+      - /app/.venv  # Exclude venv from host mount
+    working_dir: /app
+    command: ["/bin/bash"]
+    stdin_open: true
+    tty: true
+
+# Define volumes for data persistence
+volumes:
+  data:
+    driver: local
+  config:
+    driver: local 

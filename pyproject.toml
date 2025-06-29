@@ -1,0 +1,175 @@
+[project]
+name = "url2md4ai"
+dynamic = ["version"]
+description = "Convert web pages to LLM-optimized markdown from URLs with dynamic content rendering"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Saverio Mazza", email = "saverio3107@gmail.com" }
+]
+maintainers = [
+    { name = "Saverio Mazza", email = "saverio3107@gmail.com" }
+]
+license = { text = "MIT" }
+keywords = [
+    "url", "markdown", "web-scraping", "llm", "content-extraction", 
+    "html-to-markdown", "dynamic-rendering", "javascript-rendering",
+    "playwright", "web-automation", "ai-preprocessing"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: HTML",
+    "Topic :: Text Processing :: Markup :: Markdown",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Utilities",
+]
+
+dependencies = [
+    "playwright>=1.40.0",
+    "html2text>=2024.2.26",
+    "aiohttp>=3.9.0",
+    "loguru>=0.7.2",
+    "click>=8.1.7",
+    "python-dotenv>=1.0.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "trafilatura>=1.6.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.12.0",
+    "pytest-asyncio>=0.23.0",
+    "black>=24.0.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "pre-commit>=4.0.0",
+    "jupyter>=1.0.0",
+    "ipykernel>=6.25.0",
+]
+
+[project.scripts]
+url2md4ai = "url2md4ai.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/mazzasaverio/url2md4ai"
+Repository = "https://github.com/mazzasaverio/url2md4ai"
+Documentation = "https://github.com/mazzasaverio/url2md4ai#readme"
+"Bug Tracker" = "https://github.com/mazzasaverio/url2md4ai/issues"
+Changelog = "https://github.com/mazzasaverio/url2md4ai/blob/main/CHANGELOG.md"
+"Source Code" = "https://github.com/mazzasaverio/url2md4ai"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/url2md4ai/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/url2md4ai"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.12.0",
+    "pytest-asyncio>=0.23.0",
+    "black>=24.0.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "pre-commit>=4.0.0",
+    "jupyter>=1.0.0",
+    "ipykernel>=6.25.0",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "UP", "ANN", "S", "B", "A", "COM", "C4", "DTZ", "T10", "EM", "EXE", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "INT", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "NPY", "RUF"]
+ignore = [
+    "S101",     # assert detected
+    "PLR0913",  # too many arguments
+    "PLR2004",  # magic value used in comparison
+    "ANN001",   # missing type annotation for function argument (tests)
+    "ANN201",   # missing return type annotation for public function
+    "ANN204",   # missing return type annotation for special method
+    "ANN401",   # dynamically typed expressions (typing.Any) disallowed
+    "SLF001",   # private member access (needed for testing)
+    "G004",     # logging statement uses f-string (acceptable)
+    "TRY400",   # use logging.exception instead of logging.error
+    "TID252",   # prefer absolute imports (relative imports OK for internal modules)
+    "INP001",   # implicit namespace package (test directories)
+    "F841",     # local variable assigned but never used (tests)
+    "W293",     # blank line contains whitespace
+    "W291",     # trailing whitespace
+    "TRY003",   # avoid specifying long messages outside exception class
+    "TRY301",   # abstract raise to inner function
+    "TRY300",   # consider moving statement to else block
+    "EM102",    # exception must not use f-string literal
+    "PTH123",   # open() should be replaced by Path.open()
+    "C401",     # unnecessary generator
+    "DTZ005",   # datetime.now() called without tz argument
+    "E501",     # line too long (will fix critical ones only)
+    "SIM117",   # use single with statement
+    "PLC0415",  # import should be at top level
+    "ANN206",   # missing return type annotation for classmethod
+    "EM101",    # exception must not use string literal
+    "PLR0911",  # too many return statements
+    "PLR0912",  # too many branches  
+    "PLR0915",  # too many statements
+]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src/url2md4ai",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=75",  # Lowered for initial release
+    "-v"
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*", 
+    "*/test_*", 
+    "*/cli.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

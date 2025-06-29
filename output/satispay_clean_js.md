@@ -1,0 +1,69 @@
+When you visit this website, Satispay may store or retrieve information on your browser by using cookies provided by us or third parties. Such information might be about you, your preferences or your device. If you have consented to, we may also retrieve analytics statistics on your usage of the website and provide you with targeted advertising. You can choose to accept or deny all cookies (other than those necessary for the functioning of this website) by clicking the appropriate button below. There's more: you can select only certain types of cookies and confirm your selection, by clicking the "Customize" button.
+You will be able to update your preferences at any time by clicking the button at the bottom left of any webpage. Read our Cookie Policy to find out more.
+These cookies are necessary for the functioning of the website, then we will use them without your prior consent.
+They are usually only set in response to your actions, such as a request for services, setting your privacy preferences, logging in or filling in forms.
+You can set your browser to block or alert you about these cookies, but some parts of the site will not then work.
+Some of the data collected by this provider is for the purposes of personalization and measuring advertising effectiveness.
+These cookies allow us to count visits and traffic sources so we can measure and improve the performance of our site.
+They help us know which pages are the most and least popular and see how visitors move around the website.
+If you do not allow these cookies we will not be able to monitor the performance of our website.
+Marketing cookies are set through our website by our advertising partners. They may be used by those companies to build a profile based on your interests and show you relevant ads on other websites.
+Such cookies generally rely on unique identifiers on your browser and internet device.
+If you do not allow these cookies, you will experience less targeted advertising.
+Some of the data collected by this provider is for the purposes of personalization and measuring advertising effectiveness.
+Cookies are small text files used by websites that can store and retrieve information on a user's device to make the experience more efficient and customized.
+We can store cookies on and retrieve information from your device if you have given your informed consent to do so, unless cookies are necessary for the functioning of this website.
+Please visit our Cookie Policy for further information.
+**📢 Championing Diversity: People with disabilities encouraged to apply (L.68/99) 🚀 ** **We Welcome Everyone!**
+This role is part of our commitment to fostering an inclusive workplace: this is why Satispay mainly dedicates this job opportunity to candidates eligible under specific employment protection laws, including those with disabilities or other protected status, in line with Italian law (L.68/99). We encourage candidates from all backgrounds to apply.
+**Still willing to apply for the role? **This specific application form is dedicated mainly to candidates with disabilities. However, we value diversity and talent in all its forms, and everyone is welcome to apply for a job at Satispay! If you’re interested in the role, but you’re not a candidate with disabilities, visit the following link and apply __here__. **Data Analyst** **About Satispay**
+Satispay was born to revolutionise everyday payments – making them simple, fair, and accessible to everyone. Now, the focus has moved even further, aiming to shape the future of money.
+We're a movement empowering millions of people, driven by a shared purpose to tackle big challenges. And we're just getting started. We move quickly, think boldly, and trust each other to challenge the norm, learning and growing as we go.
+If you're looking for more than just your next job – if you want to build something impactful with a talented team – you're in the right place.
+**What you’ll be doing**
+As a
+**Data Analyst**, you’ll play a key role in **enhancing our data-driven decision-making and optimizing product and business processes by researching, analyzing, and visualizing data to drive impactful solutions.** Here’s what your day-to-day will look like: **Drive impact** – By researching and implementing rigorous data-driven solutions that bring concrete value to product and business lines. **Analyze data** – To interpret datasets, derive actionable insights, and support critical decision-making processes across various teams. **Design experiments** – To develop and manage A/B tests that optimize and guide product and process enhancements based on measurable results. **Create visualisations** – To track key metrics and assist in the creation of visual representations (dashboards, maps) for effective communication of analytical insights to stakeholders. **Manage analytic solutions** – By modernizing, standardizing, troubleshooting, and maintaining existing tools to ensure accuracy and reliability of our data infrastructure.
+Expect challenges, collaboration, and the freedom to bring your ideas to life. Things change quickly here, so be ready to adapt, take initiative, and shape your role as we grow.
+**Who we’re looking for**
+We need a problem-solver with a strong analytical mindset who thrives in a collaborative environment. If you’re detail-oriented and ready to take ownership in a dynamic setting, you’ll fit right in! Does this sound like you?
+**Relevant experience** – 3+ years of experience in Business Intelligence or Data Analytics, demonstrating a strong understanding of data analysis principles. **Strong analytical skills** – With proven analytical, statistical, and quantitative problem-solving skills to tackle complex data challenges. **Technical proficiency** – Advanced knowledge of SQL, including query optimization techniques for efficient data retrieval and manipulation. **Programming skills** – Extensive knowledge of Python or R for statistical analysis, data manipulation, and automation of analytical tasks. **Data visualization skills** – Experience with Looker, Tableau, or similar visualization tools to create insightful and easily understandable data representations.
+Don't worry if you don't tick every box. We believe in the power of different viewpoints and strengths. Your unique perspective is important as we build something special. If you're passionate and can make a difference, we truly encourage you to apply.
+**Our benefits & perks**
+We believe high commitment, effort, and impact deserve to be highly rewarded and supported. That’s why we created Satispay CareAbout, our way of making sure you’re supported in your well-being, growth, and finances:
+👨👩👧
+**CareAbout health & well-being**
+Unlimited paid time off
+Psychological support & mental health webinars with Serenis
+Flexible hybrid working system
+Extended parental leave
+Childcare leave
+📚
+**CareAbout growth & development**
+Professional development programmes
+Internal mobility program
+Language classes with Preply
+Internal workshops & training
+💰
+**CareAbout financial support**
+Stock Option Plan (with additional grants often provided based on performance)
+International relocation support
+Competitive salary
+Flexible Benefit budget
+Meal vouchers
+**Equal-Opportunity Employer**
+At Satispay, we're proud to be an equal-opportunity employer. We celebrate diversity and inclusion, welcoming individuals of all backgrounds. This opportunity is open to everyone, regardless - for instance - of race, colour, religion, sex, gender identity, sexual orientation, and national origin. Join us in a workplace where everyone belongs!
+**Learn more about us**
+Curious if our way of working clicks with yours? Our values and pillars aren’t just fancy words on a page - they really shape everything we do. Explore them here.
+**Sounds like your kind of place? Awesome! We’d love to hear your story.**
+#LI-HYBRID
+#LI-GA1
+Take a dive into the world of Satispay. We tell you about our vision and the goals we want to achieve.
+Do you need help?
+We are at your disposal for any additional information. Contact us.
+Are you a business?
+Should you have any questions regarding our service for accepting payments please email us at business@satispay.com
+Mobile lost or stolen?
+If your cell phone has been stolen or you have lost it, block your account
+**Payment services** are provided by **Satispay Europe S.A.**, registered under no. W00000010 in the Register of Electronic Money Institutions at the Commission de Surveillance du Secteur Financier and under no. B229149 in the Luxembourg Business Register. Registered office: 53, Boulevard Royal, L-2449 Luxembourg.
+**Corporate welfare services** are provided by **SatisWelfare S.p.A.**, tax code and registration number in the Milan Business Register no. 12408640964. Registered office: Piazza Fidia 1, 20159 Milan.
+**Investment services** are provided by **Satispay Invest S.A**. registered under No. P00000555 in the Register of Investment Firms at the Commission de Surveillance du Secteur Financier and under no. B285448 in the Luxembourg Business Register. Registered office: 53, Boulevard Royal, L-2449 Luxembourg.

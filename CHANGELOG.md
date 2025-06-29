@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.1] - 2024-12-29
+
+### Added
+- ✨ Initial release of url2md4ai
+- 🌐 Convert web pages to LLM-optimized markdown
+- 🎭 JavaScript rendering support with Playwright
+- ⚡ Fast static content extraction with aiohttp
+- 🧹 Advanced content cleaning with Trafilatura + BeautifulSoup
+- 🍪 Automatic cookie banner and unwanted element removal
+- 🔗 Hash-based filename generation from URLs
+- ⚙️ Comprehensive configuration system
+- 🛠️ CLI tool with single URL and batch processing
+- 📝 Full type annotations and mypy compliance
+- 🐍 Python 3.10+ support with async/await architecture
+
+### Technical Features
+- Configurable extraction settings
+- Content filtering for ads, navigation, social media
+- Rate limiting and caching support
+- Clean, maintainable codebase
+- Comprehensive logging with Loguru
+
 ## [Unreleased]
 
 ### Added

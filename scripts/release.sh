@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Release script for structured-output-cookbook
+# Release script for url2md4ai
 # Usage: ./scripts/release.sh [version]
 
 if [ $# -eq 0 ]; then
@@ -54,37 +54,46 @@ fi
 
 # Update version in __init__.py
 echo "📝 Updating version to $VERSION..."
-sed -i.bak "s/__version__ = \".*\"/__version__ = \"$VERSION\"/" src/structured_output_cookbook/__init__.py
+sed -i.bak "s/__version__ = \".*\"/__version__ = \"$VERSION\"/" src/url2md4ai/__init__.py
 
 # Check if backup file exists and remove it (for cross-platform compatibility)
-if [ -f "src/structured_output_cookbook/__init__.py.bak" ]; then
-    rm src/structured_output_cookbook/__init__.py.bak
+if [ -f "src/url2md4ai/__init__.py.bak" ]; then
+    rm src/url2md4ai/__init__.py.bak
 fi
 
-# Update CHANGELOG.md date
-TODAY=$(date +%Y-%m-%d)
-sed -i.bak "s/## \[${VERSION}\] - .*/## [${VERSION}] - ${TODAY}/" CHANGELOG.md
-
-# Check if backup file exists and remove it
-if [ -f "CHANGELOG.md.bak" ]; then
-    rm CHANGELOG.md.bak
-fi
-
-echo "📝 Please review the CHANGELOG.md and ensure all changes for version $VERSION are documented"
-echo "Current changelog entry:"
-echo "========================="
-grep -A 20 "## \[${VERSION}\]" CHANGELOG.md | head -21
-echo "========================="
-echo ""
-read -p "Press Enter to continue if the changelog looks good, or Ctrl+C to abort..."
-
-# Commit version bump
-echo "💾 Committing version bump..."
-git add src/structured_output_cookbook/__init__.py CHANGELOG.md
-git commit -m "🔖 Bump version to $VERSION
+# Update CHANGELOG.md date if it exists
+if [ -f "CHANGELOG.md" ]; then
+    TODAY=$(date +%Y-%m-%d)
+    sed -i.bak "s/## \[${VERSION}\] - .*/## [${VERSION}] - ${TODAY}/" CHANGELOG.md
+    
+    # Check if backup file exists and remove it
+    if [ -f "CHANGELOG.md.bak" ]; then
+        rm CHANGELOG.md.bak
+    fi
+    
+    echo "📝 Please review the CHANGELOG.md and ensure all changes for version $VERSION are documented"
+    echo "Current changelog entry:"
+    echo "========================="
+    grep -A 20 "## \[${VERSION}\]" CHANGELOG.md | head -21
+    echo "========================="
+    echo ""
+    read -p "Press Enter to continue if the changelog looks good, or Ctrl+C to abort..."
+    
+    # Commit version bump with changelog
+    echo "💾 Committing version bump..."
+    git add src/url2md4ai/__init__.py CHANGELOG.md
+    git commit -m "🔖 Bump version to $VERSION
 
 - Update version in __init__.py
 - Update CHANGELOG.md with release date"
+else
+    # Commit version bump without changelog
+    echo "💾 Committing version bump..."
+    git add src/url2md4ai/__init__.py
+    git commit -m "🔖 Bump version to $VERSION
+
+- Update version in __init__.py"
+fi
 
 # Create and push tag
 echo "🏷️  Creating tag v$VERSION..."
@@ -98,13 +107,13 @@ git push origin "v$VERSION"
 
 echo "✅ Release $VERSION initiated!"
 echo ""
-echo "🔗 GitHub Actions: https://github.com/mazzasaverio/structured-output-cookbook/actions"
-echo "📦 PyPI: https://pypi.org/project/structured-output-cookbook/"
+echo "🔗 GitHub Actions: https://github.com/mazzasaverio/url2md4ai/actions"
+echo "📦 PyPI: https://pypi.org/project/url2md4ai/"
 echo ""
-echo "The GitHub Actions workflow will:"
-echo "  1. ✅ Run tests on multiple Python versions"
-echo "  2. 📦 Build the package"
-echo "  3. 🚀 Publish to PyPI (if tag push)"
-echo "  4. 📝 Create GitHub release with changelog"
+echo "Next steps:"
+echo "  1. ✅ Git tag created and pushed"
+echo "  2. 📦 Build package with: make build"
+echo "  3. 🚀 Publish to PyPI with: make publish"
+echo "  4. 📝 Create GitHub release manually or with GitHub Actions"
 echo ""
-echo "Monitor the workflow progress at the GitHub Actions link above." 
+echo "Release tag v$VERSION has been created and pushed to GitHub." 

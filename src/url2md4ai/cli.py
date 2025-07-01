@@ -38,9 +38,9 @@ def print_result_info(result: ConversionResult, show_metadata: bool = False) -> 
     help="Output directory for markdown files",
 )
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
-@click.pass_context 
+@click.pass_context
 def cli(
-    ctx: click.Context, 
+    ctx: click.Context,
     output_dir: str | None,
     verbose: bool,
 ) -> None:

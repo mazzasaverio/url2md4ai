@@ -38,6 +38,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Performance optimizations
 
+## [0.1.0] - TBD
+
+### Added
+- ✨ Comprehensive test suite with 82% coverage (up from 36%)
+- 🧪 New test files for URLHasher, ContentCleaner, ConversionResult, and URLToMarkdownConverter
+- 🔄 Tests for SimpleCache and RateLimiter components
+- 🛠️ Improved error handling and type safety
+
+### Changed
+- 🔧 Simplified converter interface by removing unused parameters
+- 🧹 Removed unused JavaScript and Trafilatura options from CLI
+- ⚡ Improved code quality and maintainability
+- 🐛 Fixed temporary file handling in tests
+- 📝 Enhanced fixture usage in test suite
+
+### Technical
+- Increased test coverage from 36% to 82%
+- Improved converter.py coverage from 26% to >80%
+- Improved rate_limiter.py coverage from 22% to >80%
+- Enhanced type safety and error handling
+- Simplified public API interface
+
 ## [0.1.1] - TBD
 
 ### Fixed

@@ -20,12 +20,10 @@ class ConversionResult:
     success: bool
     url: str
     markdown: str = ""
+    html_content: str = ""  # Raw HTML content
     title: str = ""
     filename: str = ""
     output_path: str = ""
-    file_size: int = 0
-    processing_time: float = 0.0
-    extraction_method: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
     error: str = ""
 

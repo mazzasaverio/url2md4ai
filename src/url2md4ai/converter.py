@@ -33,9 +33,9 @@ class ConversionResult:
         return cls(success=True, **kwargs)
 
     @classmethod
-    def error_result(cls, error: str, url: str) -> "ConversionResult":
+    def error_result(cls, error: str, url: str, **kwargs: Any) -> "ConversionResult":
         """Create an error conversion result."""
-        return cls(success=False, error=error, url=url)
+        return cls(success=False, error=error, url=url, **kwargs)
 
 
 class URLHasher:
@@ -88,6 +88,7 @@ class URLToMarkdownConverter:
         self,
         url: str,
         output_path: str | None = None,
+        save_to_file: bool = True,
     ) -> ConversionResult:
         """Convert URL to markdown with LLM optimization."""
 
@@ -103,17 +104,27 @@ class URLToMarkdownConverter:
             markdown = self.cleaner.clean_with_trafilatura(html_content, url)
 
             if not markdown:
-                return ConversionResult.error_result("Content extraction failed", url)
+                return ConversionResult.error_result(
+                    "Content extraction failed",
+                    url,
+                    html_content=html_content,
+                )
 
             filename = URLHasher.generate_filename(url)
 
             save_path = None
-            if output_path or self.config.output_dir:
-                save_path = output_path or str(Path(self.config.output_dir) / filename)
-                self._save_markdown(markdown, save_path)
-                self.logger.info(f"Markdown saved to: {save_path}")
+            if save_to_file and (output_path or self.config.output_dir):
+                try:
+                    save_path = output_path or str(
+                        Path(self.config.output_dir) / filename,
+                    )
+                    self._save_markdown(markdown, save_path)
+                    self.logger.info(f"Markdown saved to: {save_path}")
+                except Exception as e:
+                    self.logger.error(f"Failed to save markdown: {e}")
+                    # Continue without saving, but don't fail the conversion
             else:
-                self.logger.info(f"Markdown saved to: {filename}")
+                self.logger.info(f"Markdown generated with filename: {filename}")
 
             return ConversionResult.success_result(
                 markdown=markdown,

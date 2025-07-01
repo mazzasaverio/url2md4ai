@@ -126,10 +126,8 @@ class TestURLToMarkdownConverter:
     async def test_convert_url_success(self, converter, mocker):
         # Mock the _fetch_content method
         html_content = "<html><body><h1>Test</h1><p>Content</p></body></html>"
-        mocker.patch.object(
-            converter, "_fetch_content", return_value=html_content
-        )
-        
+        mocker.patch.object(converter, "_fetch_content", return_value=html_content)
+
         # Mock the clean_with_trafilatura method
         markdown_content = "# Test\n\nContent"
         mocker.patch.object(
@@ -138,8 +136,8 @@ class TestURLToMarkdownConverter:
             return_value=markdown_content,
         )
 
-        result = await converter.convert_url("https://example.com")
-        
+        result = await converter.convert_url("https://example.com", save_to_file=False)
+
         assert result.success
         assert result.url == "https://example.com"
         assert result.html_content == html_content
@@ -151,9 +149,9 @@ class TestURLToMarkdownConverter:
     async def test_convert_url_fetch_failure(self, converter, mocker):
         # Mock fetch failure
         mocker.patch.object(converter, "_fetch_content", return_value="")
-        
-        result = await converter.convert_url("https://example.com")
-        
+
+        result = await converter.convert_url("https://example.com", save_to_file=False)
+
         assert not result.success
         assert "Failed to fetch content" in result.error
         assert not result.html_content
@@ -163,17 +161,15 @@ class TestURLToMarkdownConverter:
     async def test_convert_url_extraction_failure(self, converter, mocker):
         # Mock successful fetch but failed extraction
         html_content = "<html><body>Test</body></html>"
-        mocker.patch.object(
-            converter, "_fetch_content", return_value=html_content
-        )
+        mocker.patch.object(converter, "_fetch_content", return_value=html_content)
         mocker.patch.object(
             converter.cleaner,
             "clean_with_trafilatura",
             return_value=None,
         )
-        
-        result = await converter.convert_url("https://example.com")
-        
+
+        result = await converter.convert_url("https://example.com", save_to_file=False)
+
         assert not result.success
         assert "Content extraction failed" in result.error
         assert not result.markdown

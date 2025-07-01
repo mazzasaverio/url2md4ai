@@ -6,7 +6,7 @@ Supports dynamic content rendering with JavaScript and generates unique filename
 based on URL hashes.
 """
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 from .config import Config
 from .converter import ConversionResult, URLHasher, URLToMarkdownConverter

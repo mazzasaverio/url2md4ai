@@ -69,12 +69,6 @@ class ContentCleaner:
             extracted = trafilatura.extract(
                 html_content,
                 url=url,
-                include_comments=self.config.include_comments,
-                include_tables=self.config.include_tables,
-                include_images=self.config.include_images,
-                include_formatting=self.config.include_formatting,
-                favor_precision=self.config.favor_precision,
-                favor_recall=self.config.favor_recall,
             )
             return str(extracted) if extracted else None
 
@@ -125,6 +119,7 @@ class URLToMarkdownConverter:
 
             return ConversionResult.success_result(
                 markdown=markdown,
+                html_content=html_content,
                 url=url,
                 filename=filename,
                 output_path=save_path or "",

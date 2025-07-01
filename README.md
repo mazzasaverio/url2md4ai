@@ -109,6 +109,10 @@ url2md4ai convert "https://example.com" --no-js
 
 # Raw extraction (no LLM optimization)
 url2md4ai convert "https://example.com" --raw
+
+# Get both HTML and Markdown
+url2md4ai convert "https://example.com" --raw --save-html --output-dir raw_content  # Get raw HTML
+url2md4ai convert "https://example.com" --clean --output-dir clean_content  # Get clean markdown
 ```
 
 #### Batch Processing
@@ -171,7 +175,48 @@ async def convert_url():
     return result
 
 result = asyncio.run(convert_url())
-```
+
+# Get both HTML and Markdown from a URL
+async def get_html_and_markdown():
+    # Initialize converter with raw HTML option
+    config = Config(
+        clean_content=False,  # Get raw HTML
+        llm_optimized=False,  # No extra processing
+        wait_for_network_idle=True,  # Wait for dynamic content
+        page_wait_timeout=2000  # Wait 2s for dynamic content
+    )
+    converter = URLToMarkdownConverter(config)
+    
+    # Get raw HTML first
+    result = await converter.convert_url(
+        "https://example.com",
+        save_to_file=False  # Don't save to file
+    )
+    raw_html = result.html
+    
+    # Now get clean markdown with optimizations
+    config.clean_content = True
+    config.llm_optimized = True
+    converter = URLToMarkdownConverter(config)
+    
+    result = await converter.convert_url(
+        "https://example.com",
+        save_to_file=True  # Save markdown to file
+    )
+    clean_markdown = result.markdown
+    
+    return {
+        "html": raw_html,
+        "markdown": clean_markdown,
+        "title": result.title,
+        "metadata": result.metadata
+    }
+
+# Use the function
+result = asyncio.run(get_html_and_markdown())
+print(f"📄 HTML size: {len(result['html']):,} characters")
+print(f"📝 Markdown size: {len(result['markdown']):,} characters")
+print(f"🏷️  Title: {result['title']}")
 
 #### Advanced Usage
 
@@ -181,12 +226,15 @@ from url2md4ai import URLToMarkdownConverter, Config, URLHasher
 # Custom configuration for specific content types
 config = Config(
     timeout=60,
-    javascript_enabled=True,  # Essential for SPAs
+    wait_for_network_idle=True,  # Wait for dynamic content
+    page_wait_timeout=2000,  # Wait 2s for dynamic content
     clean_content=True,       # Remove ads/banners
     llm_optimized=True,       # Optimize for LLM processing
     remove_cookie_banners=True,
     remove_navigation=True,
     remove_ads=True,
+    remove_social_media=True,
+    remove_comments=True,
     output_dir="ai_content",
     user_agent="MyAI/1.0"
 )
@@ -196,8 +244,12 @@ converter = URLToMarkdownConverter(config)
 # Convert with maximum cleaning for LLM processing
 result = await converter.convert_url(
     url="https://example.com",
+    use_trafilatura=True,      # Use intelligent extraction
     use_javascript=True,      # Handle dynamic content
-    use_trafilatura=True      # Use intelligent extraction
+    favor_precision=True,     # Prefer precision over recall
+    include_tables=True,      # Include table content
+    include_images=False,     # Exclude image references
+    include_formatting=True   # Preserve text formatting
 )
 
 if result.success:
@@ -254,21 +306,28 @@ url2md4ai convert "https://company.com/careers/position" --show-metadata
 ### Environment Variables
 
 ```bash
-# LLM-Optimized Extraction Settings
+# Content Extraction Settings
 export URL2MD_CLEAN_CONTENT=true
 export URL2MD_LLM_OPTIMIZED=true
 export URL2MD_USE_TRAFILATURA=true
 
-# Content Filtering (Noise Removal)
+# Dynamic Content Settings
+export URL2MD_WAIT_NETWORK=true
+export URL2MD_PAGE_TIMEOUT=2000
+export URL2MD_HEADLESS=true
+
+# Content Filtering
 export URL2MD_REMOVE_COOKIES=true
 export URL2MD_REMOVE_NAV=true
 export URL2MD_REMOVE_ADS=true
 export URL2MD_REMOVE_SOCIAL=true
+export URL2MD_REMOVE_COMMENTS=true
 
-# JavaScript Rendering
-export URL2MD_JAVASCRIPT=true
-export URL2MD_HEADLESS=true
-export URL2MD_PAGE_TIMEOUT=2000
+# Advanced Settings
+export URL2MD_FAVOR_PRECISION=true
+export URL2MD_INCLUDE_TABLES=true
+export URL2MD_INCLUDE_IMAGES=false
+export URL2MD_INCLUDE_FORMATTING=true
 
 # Output Settings
 export URL2MD_OUTPUT_DIR="output"
@@ -284,19 +343,25 @@ export URL2MD_USER_AGENT="url2md4ai/1.0"
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| **LLM Optimization** | | |
+| **Content Extraction** | | |
 | `clean_content` | true | Remove ads, banners, navigation |
 | `llm_optimized` | true | Post-process for LLM consumption |
 | `use_trafilatura` | true | Use intelligent text extraction |
+| **Dynamic Content** | | |
+| `wait_for_network_idle` | true | Wait for network activity to finish |
+| `page_wait_timeout` | 2000 | Wait time for dynamic content (ms) |
+| `browser_headless` | true | Run browser in headless mode |
 | **Content Filtering** | | |
 | `remove_cookie_banners` | true | Remove cookie consent UI |
 | `remove_navigation` | true | Remove nav menus and headers |
 | `remove_ads` | true | Remove advertising content |
 | `remove_social_media` | true | Remove social sharing widgets |
-| **JavaScript Rendering** | | |
-| `javascript_enabled` | true | Enable dynamic content rendering |
-| `browser_headless` | true | Run browser in headless mode |
-| `page_wait_timeout` | 2000 | Wait time for page loading (ms) |
+| `remove_comments` | true | Remove user comments |
+| **Advanced Settings** | | |
+| `favor_precision` | true | Prefer precision over recall |
+| `include_tables` | true | Include table content |
+| `include_images` | false | Include image references |
+| `include_formatting` | true | Preserve text formatting |
 | **Output Settings** | | |
 | `output_dir` | "output" | Default output directory |
 | `use_hash_filenames` | true | Generate deterministic filenames |

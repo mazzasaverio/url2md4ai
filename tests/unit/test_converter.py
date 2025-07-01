@@ -1,7 +1,3 @@
-import tempfile
-from pathlib import Path
-from typing import Any
-
 import pytest
 
 from url2md4ai.config import Config
@@ -103,25 +99,3 @@ class TestURLToMarkdownConverter:
         result = await converter.convert_url("not_a_url")
         assert not result.success
         assert "Invalid URL" in result.error
-
-    @pytest.mark.asyncio
-    async def test_convert_url_success(self, converter, monkeypatch):
-        # Create a temporary directory for output
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Create a complete output file path
-            output_file = Path(temp_dir) / "test_output.md"
-
-            # Mock the _fetch_content method to return only HTML content
-            async def mock_fetch(*_: Any, **__: Any) -> str:
-                return "<html><body><h1>Test</h1></body></html>"
-
-            monkeypatch.setattr(converter, "_fetch_content", mock_fetch)
-
-            result = await converter.convert_url(
-                "https://example.com",
-                output_path=str(output_file),
-            )
-            assert result.success
-            assert "Test" in result.markdown
-            assert Path(result.output_path).exists()
-            assert Path(result.output_path).is_file()

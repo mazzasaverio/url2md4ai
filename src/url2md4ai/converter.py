@@ -2,7 +2,6 @@
 
 import asyncio
 import hashlib
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -13,106 +12,51 @@ from .config import Config
 from .utils import get_logger
 
 
-@dataclass
-class ConversionResult:
-    """Result of URL to markdown conversion."""
+class ContentExtractor:
+    """Extract clean content from URLs in both HTML and Markdown formats."""
 
-    success: bool
-    url: str
-    markdown: str = ""
-    html_content: str = ""  # Raw HTML content
-    title: str = ""
-    filename: str = ""
-    output_path: str = ""
-    metadata: dict[str, Any] = field(default_factory=dict)
-    error: str = ""
+    def __init__(self, config: Config | None = None):
+        self.config = config or Config.from_env()
+        self.logger = get_logger(__name__)
 
-    @classmethod
-    def success_result(cls, **kwargs: Any) -> "ConversionResult":
-        """Create a successful conversion result."""
-        return cls(success=True, **kwargs)
-
-    @classmethod
-    def error_result(cls, error: str, url: str, **kwargs: Any) -> "ConversionResult":
-        """Create an error conversion result."""
-        return cls(success=False, error=error, url=url, **kwargs)
-
-
-class URLHasher:
-    """Generate hash-based filenames for URLs."""
-
-    @staticmethod
-    def generate_filename(url: str, extension: str = ".md") -> str:
+    def generate_filename(self, url: str, extension: str = ".md") -> str:
         """Generate a hash-based filename from URL."""
         url_hash = hashlib.sha256(url.encode()).hexdigest()[:16]
         return f"{url_hash}{extension}"
 
-    @staticmethod
-    def generate_hash(url: str) -> str:
-        """Generate just the hash part for a URL."""
-        return hashlib.sha256(url.encode()).hexdigest()[:16]
-
-
-class ContentCleaner:
-    """Advanced content cleaning for LLM optimization."""
-
-    def __init__(self, config: Config):
-        self.config = config
-        self.logger = get_logger(__name__)
-
-    def clean_with_trafilatura(self, html_content: str, url: str) -> str | None:
-        """Extract clean content using trafilatura."""
-
-        try:
-            extracted = trafilatura.extract(
-                html_content,
-                url=url,
-            )
-            return str(extracted) if extracted else None
-
-        except Exception as e:
-            self.logger.debug(f"Trafilatura extraction failed: {e}")
+    async def extract_html(self, url: str) -> str | None:
+        """Extract raw HTML content from a URL."""
+        if not self._is_valid_url(url):
             return None
 
+        try:
+            return await self._fetch_content(url)
+        except Exception as e:
+            self.logger.error(f"HTML extraction failed for {url}: {e}")
+            return None
 
-class URLToMarkdownConverter:
-    """Main converter class for URL to Markdown conversion with LLM optimization."""
-
-    def __init__(self, config: Config | None = None):
-        """Initialize the converter with configuration."""
-        self.config = config or Config.from_env()
-        self.logger = get_logger(__name__)
-        self.cleaner = ContentCleaner(self.config)
-
-    async def convert_url(
+    async def extract_markdown(
         self,
         url: str,
+        html_content: str | None = None,
         output_path: str | None = None,
         save_to_file: bool = True,
-    ) -> ConversionResult:
-        """Convert URL to markdown with LLM optimization."""
-
-        if not self._is_valid_url(url):
-            return ConversionResult.error_result("Invalid URL format", url)
+    ) -> dict[str, Any] | None:
+        """Extract clean Markdown from URL or HTML content."""
+        if not html_content:
+            html_result = await self.extract_html(url)
+            if not html_result:
+                return None
+            html_content = html_result
 
         try:
-            html_content = await self._fetch_content(url)
-
-            if not html_content:
-                return ConversionResult.error_result("Failed to fetch content", url)
-
-            markdown = self.cleaner.clean_with_trafilatura(html_content, url)
-
+            markdown = trafilatura.extract(html_content, url=url)
             if not markdown:
-                return ConversionResult.error_result(
-                    "Content extraction failed",
-                    url,
-                    html_content=html_content,
-                )
+                return None
 
-            filename = URLHasher.generate_filename(url)
-
+            filename = self.generate_filename(url)
             save_path = None
+
             if save_to_file and (output_path or self.config.output_dir):
                 try:
                     save_path = output_path or str(
@@ -122,27 +66,25 @@ class URLToMarkdownConverter:
                     self.logger.info(f"Markdown saved to: {save_path}")
                 except Exception as e:
                     self.logger.error(f"Failed to save markdown: {e}")
-                    # Continue without saving, but don't fail the conversion
-            else:
-                self.logger.info(f"Markdown generated with filename: {filename}")
+                    save_path = ""  # Clear output_path if save fails
 
-            return ConversionResult.success_result(
-                markdown=markdown,
-                html_content=html_content,
-                url=url,
-                filename=filename,
-                output_path=save_path or "",
-            )
+            else:
+                self.logger.info(f"Markdown extracted with filename: {filename}")
+
+            return {
+                "markdown": markdown,
+                "html_content": html_content,
+                "url": url,
+                "filename": filename,
+                "output_path": save_path or "",
+            }
 
         except Exception as e:
-            self.logger.error(f"Conversion failed for {url}: {e}")
-            return ConversionResult.error_result(str(e), url)
+            self.logger.error(f"Markdown extraction failed for {url}: {e}")
+            return None
 
-    async def _fetch_content(
-        self,
-        url: str,
-    ) -> str:
-        """Fetch content from URL with optional JavaScript rendering."""
+    async def _fetch_content(self, url: str) -> str:
+        """Fetch raw HTML content from URL."""
         return await self._fetch_with_playwright(url)
 
     async def _fetch_with_playwright(self, url: str) -> str:
@@ -194,6 +136,15 @@ class URLToMarkdownConverter:
         """Validate URL format."""
         return url.startswith(("http://", "https://")) and len(url) > 10
 
-    def convert_url_sync(self, url: str, **kwargs: Any) -> ConversionResult:
-        """Synchronous wrapper for convert_url."""
-        return asyncio.run(self.convert_url(url, **kwargs))
+    def extract_html_sync(self, url: str) -> str | None:
+        """Synchronous wrapper for extract_html."""
+        return asyncio.run(self.extract_html(url))
+
+    def extract_markdown_sync(
+        self,
+        url: str,
+        html_content: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any] | None:
+        """Synchronous wrapper for extract_markdown."""
+        return asyncio.run(self.extract_markdown(url, html_content, **kwargs))

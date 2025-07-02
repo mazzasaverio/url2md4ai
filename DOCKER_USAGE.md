@@ -1,26 +1,105 @@
 # Docker Usage Guide
 
-This guide shows how to use Docker with the **url2md4ai** project for converting web pages to LLM-optimized markdown.
+This guide shows how to use Docker with the **url2md4ai** project for converting web pages to clean, LLM-ready markdown.
 
-## Quick Start
+## 🚀 Quick Start
 
-### Basic Usage
+The simplest way to use the Docker image is to build it and run the `convert` command.
+
 ```bash
-# Build the image
+# 1. Build the Docker image
 docker build -t url2md4ai .
 
-# Convert a single URL
-docker run --rm \
-    -v "$(pwd)/output:/app/output" \
-    url2md4ai \
-    convert "https://example.com" --show-metadata
-
-# Convert with JavaScript rendering (for dynamic content)
-docker run --rm \
-    -v "$(pwd)/output:/app/output" \
-    url2md4ai \
-    convert "https://example.com" --force-js --show-metadata
+# 2. Run the conversion
+# This command mounts the local 'output' directory into the container
+# and saves the generated markdown file there.
+docker run --rm \\
+    -v "$(pwd)/output:/app/output" \\
+    url2md4ai \\
+    convert "https://example.com"
 ```
+
+The converted file will appear in the `output` directory on your host machine.
+
+## ⚙️ Docker Compose
+
+For a more streamlined experience, you can use the provided `docker-compose.yml`.
+
+### Basic Conversion
+
+```bash
+# Convert a single URL and save to the output directory
+docker compose run --rm url2md4ai convert "https://example.com"
+
+# Convert and print to console instead of saving
+docker compose run --rm url2md4ai convert "https://example.com" --no-save
+```
+
+### Extracting HTML
+
+```bash
+# Extract the raw HTML of a page and print to the console
+docker compose run --rm url2md4ai extract-html "https://example.com"
+```
+
+### Development Environment
+
+The `dev` service in the `docker-compose.yml` file provides an interactive shell within the container, with your local source code mounted. This is useful for development and running tests.
+
+```bash
+# Start an interactive development environment
+docker compose run --rm dev
+
+# Inside the container, you can run commands like:
+uv run pytest
+uv run ruff check .
+uv run url2md4ai convert "https://example.com"
+```
+
+## 🛠️ Available Commands
+
+The Docker entrypoint is set to `url2md4ai`, so you can run any of the CLI commands.
+
+### `convert`
+
+Converts a URL to markdown.
+
+```bash
+docker compose run --rm url2md4ai convert [OPTIONS] <URL>
+```
+
+**Common Options:**
+- `--output-dir <DIR>`: Directory to save the markdown file.
+- `--no-save`: Print the markdown to the console instead of saving to a file.
+- `--json`: Output the result as a JSON object.
+
+### `extract-html`
+
+Extracts the raw HTML from a URL.
+
+```bash
+docker compose run --rm url2md4ai extract-html [OPTIONS] <URL>
+```
+
+### `convert-html`
+
+Converts a local HTML file to markdown. You'll need to mount the file into the container.
+
+```bash
+# Assuming 'my_page.html' is in your current directory
+docker run --rm \\
+    -v "$(pwd)/my_page.html:/app/my_page.html" \\
+    -v "$(pwd)/output:/app/output" \\
+    url2md4ai \\
+    convert-html /app/my_page.html
+```
+
+## 📦 Volume Mounts
+
+The Docker setup uses a volume mount to persist the output files:
+- `./output` → `/app/output`
+
+This means any files saved to `/app/output` inside the container will be available in the `output` directory on your host machine.
 
 ## Docker Setup Options
 
@@ -145,12 +224,6 @@ export URL2MD_MAX_RETRIES=3
 export URL2MD_USER_AGENT="url2md4ai-docker/1.0"
 export URL2MD_LOG_LEVEL=INFO
 ```
-
-## Volume Mounts
-
-The Docker setup uses these volume mounts:
-- `./output` → `/app/output` (for generated markdown files)
-- `./examples` → `/app/examples` (read-only, for testing)
 
 ## Complete Examples
 

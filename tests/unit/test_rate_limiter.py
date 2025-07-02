@@ -2,7 +2,6 @@ import time
 
 import pytest
 
-from url2md4ai.converter import ConversionResult
 from url2md4ai.utils.rate_limiter import RateLimiter, SimpleCache
 
 
@@ -40,25 +39,6 @@ class TestSimpleCache:
         # Wait for expiration
         time.sleep(1.1)
         assert cache.get(text, schema_name, model, temperature) is None
-
-    def test_url_conversion_cache(self, cache):
-        url = "https://example.com"
-        result = ConversionResult.success_result(
-            url=url,
-            markdown="# Test",
-            title="Test Page",
-        )
-
-        # Initially should be None
-        assert cache.get_url_conversion(url) is None
-
-        # Set and get
-        cache.set_url_conversion(url, result)
-        cached = cache.get_url_conversion(url)
-        assert cached is not None
-        assert cached.url == url
-        assert cached.markdown == "# Test"
-        assert cached.title == "Test Page"
 
     def test_clear_expired(self, cache):
         # Add some entries

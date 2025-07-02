@@ -6,9 +6,9 @@
 ![Trafilatura](https://img.shields.io/badge/powered--by-trafilatura-brightgreen.svg)
 ![Playwright](https://img.shields.io/badge/js--rendering-playwright-orange.svg)
 
-**🎯 Lean Python tool for extracting clean, LLM-optimized markdown from web pages**
+**🎯 A lean Python tool for extracting clean, LLM-optimized markdown from web pages.**
 
-Perfect for AI applications that need high-quality text extraction from both static and dynamic web content. Combines **Playwright** for JavaScript rendering with **Trafilatura** for intelligent content extraction, delivering markdown specifically optimized for LLM processing and information extraction.
+Perfect for AI applications that need high-quality text extraction from both static and dynamic web content. It combines **Playwright** for JavaScript rendering with **Trafilatura** for intelligent content extraction, delivering clean markdown ready for LLM processing.
 
 ## 🎯 Why url2md4ai?
 
@@ -33,11 +33,11 @@ url2md4ai convert "https://www.satispay.com/careers/job-posting" --show-metadata
 
 ## ✨ Features
 
-### 🎯 **LLM-Optimized Text Extraction**
-- **🧠 Smart Content Extraction**: Powered by Trafilatura for intelligent text extraction
-- **🚀 Dynamic Content Support**: Full JavaScript rendering with Playwright for SPAs and dynamic sites
-- **🧹 Clean Output**: Removes ads, cookie banners, navigation, and other noise for pure content
-- **📊 Maximum Information Density**: Optimized markdown specifically designed for LLM processing
+- **🧠 Smart Content Extraction**: Powered by `trafilatura` for intelligent text extraction from HTML.
+- **🚀 Dynamic Content Support**: Uses `playwright` to render JavaScript on web pages, ensuring content from SPAs and dynamic sites is captured.
+- **🧹 Clean Output**: Removes ads, cookie banners, navigation, and other noise for a cleaner final output.
+- **🐍 Simple API**: A straightforward Python API and CLI for easy integration into your workflows.
+- **📁 Deterministic Filenames**: Generates unique, hash-based filenames from URLs for consistent output.
 
 ### ⚡ **Lean & Efficient**
 - **🎯 Focused Purpose**: Built specifically for AI/LLM text extraction workflows
@@ -53,7 +53,7 @@ url2md4ai convert "https://www.satispay.com/careers/job-posting" --show-metadata
 
 ## 🚀 Quick Start
 
-### Using uv (Recommended)
+### Using `uv` (Recommended)
 
 ```bash
 # Install uv if you haven't already
@@ -71,7 +71,7 @@ uv run playwright install chromium
 uv run url2md4ai convert "https://example.com"
 ```
 
-### Using pip
+### Using `pip`
 
 ```bash
 pip install url2md4ai
@@ -81,191 +81,131 @@ url2md4ai convert "https://example.com"
 
 ### Using Docker
 
-```bash
-# Build the image
-docker build -t url2md4ai .
-
-# Run with URL conversion
-docker run --rm \
-  -v $(pwd)/output:/app/output \
-  url2md4ai \
-  convert "https://example.com"
-```
+See [DOCKER_USAGE.md](DOCKER_USAGE.md) for instructions on how to use the provided Docker setup.
 
 ## 📖 Usage
 
-### CLI Commands
+### Command-Line Interface (CLI)
 
-#### Basic Conversion
+The CLI provides a simple way to convert URLs to markdown or extract raw HTML.
+
+#### Convert a URL to Markdown
+
 ```bash
-# Convert a single URL (with metadata)
-url2md4ai convert "https://example.com" --show-metadata
+# Convert a single URL and print to console
+url2md4ai convert "https://example.com" --no-save
 
-# Convert with custom output file
-url2md4ai convert "https://example.com" -o my_page.md
+# Save the markdown to the default 'output' directory
+url2md4ai convert "https://example.com"
 
-# Convert without JavaScript (3x faster for static content)
-url2md4ai convert "https://example.com" --no-js
-
-# Raw extraction (no LLM optimization)
-url2md4ai convert "https://example.com" --raw
-
-# Get both HTML and Markdown
-url2md4ai convert "https://example.com" --raw --save-html --output-dir raw_content  # Get raw HTML
-url2md4ai convert "https://example.com" --clean --output-dir clean_content  # Get clean markdown
+# Specify a custom output directory
+url2md4ai convert "https://example.com" --output-dir my_markdown
 ```
 
-#### Batch Processing
+#### Extract Raw HTML from a URL
+
 ```bash
-# Convert multiple URLs with parallel processing
-url2md4ai batch "https://site1.com" "https://site2.com" "https://site3.com" --concurrency 5
-
-# Continue processing even if some URLs fail
-url2md4ai batch "https://site1.com" "https://site2.com" --continue-on-error
-
-# Custom output directory
-url2md4ai batch "https://example.com" -d /path/to/output
+# Get the raw HTML of a page and print it to the console
+url2md4ai extract-html "https://example.com"
 ```
 
-#### Preview and Utilities
+#### Convert a Local HTML File
+
 ```bash
-# Preview conversion without saving
-url2md4ai preview "https://example.com" --show-content
+# Convert a local HTML file to markdown
+url2md4ai convert-html my_page.html
+```
 
-# Test different extraction methods
-url2md4ai test-extraction "https://example.com" --method both --show-diff
-
-# Generate hash filename for URL
-url2md4ai hash "https://example.com"
-
-# Show current configuration
-url2md4ai config-info --format json
+For more options, use the `--help` flag with any command:
+```bash
+url2md4ai convert --help
 ```
 
 ### Python API
 
+The Python API provides programmatic access to the content extraction functionality.
+
 ```python
-from url2md4ai import URLToMarkdownConverter, Config
-
-# Initialize converter
-config = Config.from_env()
-converter = URLToMarkdownConverter(config)
-
-# Convert URL synchronously (perfect for LLM pipelines)
-result = converter.convert_url_sync("https://example.com")
-
-if result.success:
-    print(f"📄 Title: {result.title}")
-    print(f"📁 Saved as: {result.filename}")
-    print(f"📊 Size: {result.file_size:,} characters")
-    print(f"⚡ Method: {result.extraction_method}")
-    print(f"⏱️  Processing time: {result.processing_time:.2f}s")
-    
-    # Use extracted content for LLM processing
-    llm_ready_content = result.markdown
-    print("🧠 LLM-ready content extracted successfully!")
-else:
-    print(f"❌ Error: {result.error}")
-
-# Convert URL asynchronously
 import asyncio
+from url2md4ai import ContentExtractor
 
-async def convert_url():
-    result = await converter.convert_url("https://example.com")
-    return result
+# Initialize the extractor
+extractor = ContentExtractor()
 
-result = asyncio.run(convert_url())
+async def main():
+    url = "https://example.com"
 
-# Get both HTML and Markdown from a URL
-async def get_html_and_markdown():
-    # Initialize converter with raw HTML option
-    config = Config(
-        clean_content=False,  # Get raw HTML
-        llm_optimized=False,  # No extra processing
-        wait_for_network_idle=True,  # Wait for dynamic content
-        page_wait_timeout=2000  # Wait 2s for dynamic content
-    )
-    converter = URLToMarkdownConverter(config)
-    
-    # Get raw HTML first
-    result = await converter.convert_url(
-        "https://example.com",
-        save_to_file=False  # Don't save to file
-    )
-    raw_html = result.html
-    
-    # Now get clean markdown with optimizations
-    config.clean_content = True
-    config.llm_optimized = True
-    converter = URLToMarkdownConverter(config)
-    
-    result = await converter.convert_url(
-        "https://example.com",
-        save_to_file=True  # Save markdown to file
-    )
-    clean_markdown = result.markdown
-    
-    return {
-        "html": raw_html,
-        "markdown": clean_markdown,
-        "title": result.title,
-        "metadata": result.metadata
-    }
+    # Extract clean markdown from a URL
+    markdown_result = await extractor.extract_markdown(url)
+    if markdown_result:
+        print("--- MARKDOWN ---")
+        print(markdown_result["markdown"])
+        print(f"\\nSaved to: {markdown_result['output_path']}")
 
-# Use the function
-result = asyncio.run(get_html_and_markdown())
-print(f"📄 HTML size: {len(result['html']):,} characters")
-print(f"📝 Markdown size: {len(result['markdown']):,} characters")
-print(f"🏷️  Title: {result['title']}")
+    # Extract raw HTML from a URL
+    html_content = await extractor.extract_html(url)
+    if html_content:
+        print("\\n--- HTML ---")
+        print(html_content[:200] + "...")  # Print first 200 characters
 
-#### Advanced Usage
+asyncio.run(main())
+```
+
+#### Synchronous Usage
+
+For use cases where you can't use `asyncio`, synchronous wrappers are available:
 
 ```python
-from url2md4ai import URLToMarkdownConverter, Config, URLHasher
+from url2md4ai import ContentExtractor
 
-# Custom configuration for specific content types
-config = Config(
-    timeout=60,
-    wait_for_network_idle=True,  # Wait for dynamic content
-    page_wait_timeout=2000,  # Wait 2s for dynamic content
-    clean_content=True,       # Remove ads/banners
-    llm_optimized=True,       # Optimize for LLM processing
-    remove_cookie_banners=True,
-    remove_navigation=True,
-    remove_ads=True,
-    remove_social_media=True,
-    remove_comments=True,
-    output_dir="ai_content",
-    user_agent="MyAI/1.0"
-)
+extractor = ContentExtractor()
+url = "https://example.com"
 
-converter = URLToMarkdownConverter(config)
+# Synchronously extract markdown
+markdown_result = extractor.extract_markdown_sync(url)
+if markdown_result:
+    print(markdown_result["markdown"])
 
-# Convert with maximum cleaning for LLM processing
-result = await converter.convert_url(
-    url="https://example.com",
-    use_trafilatura=True,      # Use intelligent extraction
-    use_javascript=True,      # Handle dynamic content
-    favor_precision=True,     # Prefer precision over recall
-    include_tables=True,      # Include table content
-    include_images=False,     # Exclude image references
-    include_formatting=True   # Preserve text formatting
-)
-
-if result.success:
-    # Perfect for feeding into LLMs
-    clean_content = result.markdown
-    metadata = result.metadata
-    
-    print(f"🎯 Extraction quality: {result.extraction_method}")
-    print(f"📊 Content size: {result.file_size:,} chars")
-    print(f"🧹 Cleaned and ready for LLM processing!")
-
-# Generate deterministic filenames
-hash_value = URLHasher.generate_hash("https://example.com")
-filename = URLHasher.generate_filename("https://example.com")
-print(f"🔑 Hash: {hash_value}, 📁 Filename: {filename}")
+# Synchronously extract HTML
+html_content = extractor.extract_html_sync(url)
+if html_content:
+    print(html_content[:200] + "...")
 ```
+
+## 🛠️ Configuration
+
+The behavior of the `ContentExtractor` can be customized through a `Config` object or environment variables.
+
+**Example: Custom Configuration**
+
+```python
+from url2md4ai import ContentExtractor, Config
+
+# Customize configuration
+config = Config(
+    timeout=60,                  # Page load timeout in seconds
+    user_agent="MyTestAgent/1.0", # Custom User-Agent
+    output_dir="custom_output",  # Default output directory
+    browser_headless=True,       # Run Playwright in headless mode
+    wait_for_network_idle=True,  # Wait for network to be idle
+    page_wait_timeout=2000       # Additional wait time in ms
+)
+
+extractor = ContentExtractor(config=config)
+
+# This will use the custom configuration
+extractor.extract_markdown_sync("https://example.com")
+```
+
+See `src/url2md4ai/config.py` for all available configuration options and their corresponding environment variables.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue.
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## 📊 Extraction Quality Examples
 
@@ -300,233 +240,6 @@ url2md4ai convert "https://company.com/careers/position" --show-metadata
 | **Documentation** | ⭐⭐⭐⭐⭐ | `--raw` (preserve structure) |
 | **Blog Posts** | ⭐⭐⭐⭐⭐ | default settings |
 | **Social Media** | ⭐⭐⭐ | `--force-js` required |
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-```bash
-# Content Extraction Settings
-export URL2MD_CLEAN_CONTENT=true
-export URL2MD_LLM_OPTIMIZED=true
-export URL2MD_USE_TRAFILATURA=true
-
-# Dynamic Content Settings
-export URL2MD_WAIT_NETWORK=true
-export URL2MD_PAGE_TIMEOUT=2000
-export URL2MD_HEADLESS=true
-
-# Content Filtering
-export URL2MD_REMOVE_COOKIES=true
-export URL2MD_REMOVE_NAV=true
-export URL2MD_REMOVE_ADS=true
-export URL2MD_REMOVE_SOCIAL=true
-export URL2MD_REMOVE_COMMENTS=true
-
-# Advanced Settings
-export URL2MD_FAVOR_PRECISION=true
-export URL2MD_INCLUDE_TABLES=true
-export URL2MD_INCLUDE_IMAGES=false
-export URL2MD_INCLUDE_FORMATTING=true
-
-# Output Settings
-export URL2MD_OUTPUT_DIR="output"
-export URL2MD_USE_HASH_FILENAMES=true
-
-# Performance & Reliability
-export URL2MD_TIMEOUT=30
-export URL2MD_MAX_RETRIES=3
-export URL2MD_USER_AGENT="url2md4ai/1.0"
-```
-
-### Configuration Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| **Content Extraction** | | |
-| `clean_content` | true | Remove ads, banners, navigation |
-| `llm_optimized` | true | Post-process for LLM consumption |
-| `use_trafilatura` | true | Use intelligent text extraction |
-| **Dynamic Content** | | |
-| `wait_for_network_idle` | true | Wait for network activity to finish |
-| `page_wait_timeout` | 2000 | Wait time for dynamic content (ms) |
-| `browser_headless` | true | Run browser in headless mode |
-| **Content Filtering** | | |
-| `remove_cookie_banners` | true | Remove cookie consent UI |
-| `remove_navigation` | true | Remove nav menus and headers |
-| `remove_ads` | true | Remove advertising content |
-| `remove_social_media` | true | Remove social sharing widgets |
-| `remove_comments` | true | Remove user comments |
-| **Advanced Settings** | | |
-| `favor_precision` | true | Prefer precision over recall |
-| `include_tables` | true | Include table content |
-| `include_images` | false | Include image references |
-| `include_formatting` | true | Preserve text formatting |
-| **Output Settings** | | |
-| `output_dir` | "output" | Default output directory |
-| `use_hash_filenames` | true | Generate deterministic filenames |
-
-## 🐳 Docker Usage
-
-📖 **See [DOCKER_USAGE.md](DOCKER_USAGE.md) for comprehensive Docker usage examples and troubleshooting.**
-
-### Quick Start with Docker
-
-```bash
-# Build the image
-docker build -t url2md4ai .
-
-# Convert single URL with LLM optimization
-docker run --rm \
-  -v $(pwd)/output:/app/output \
-  url2md4ai \
-  convert "https://example.com" --show-metadata
-
-# Convert dynamic content with JavaScript rendering
-docker run --rm \
-  -v $(pwd)/output:/app/output \
-  url2md4ai \
-  convert "https://spa-app.com" --force-js --show-metadata
-
-# Batch processing with parallel workers
-docker run --rm \
-  -v $(pwd)/output:/app/output \
-  url2md4ai \
-  batch "https://site1.com" "https://site2.com" --concurrency 5 --show-metadata
-```
-
-### Using Docker Compose (Recommended)
-
-```bash
-# Start with compose for easier management
-docker compose run --rm url2md4ai convert "https://example.com" --show-metadata
-
-# Development mode with full environment
-docker compose run --rm dev
-
-# Batch processing example
-docker compose run --rm url2md4ai \
-  batch "https://news.site.com/article1" "https://blog.site.com/post2" \
-  --concurrency 3 --continue-on-error --show-metadata
-```
-
-### Custom Configuration
-
-```bash
-# Override LLM optimization settings
-docker run --rm \
-  -v $(pwd)/output:/app/output \
-  -e URL2MD_CLEAN_CONTENT=false \
-  -e URL2MD_LLM_OPTIMIZED=false \
-  url2md4ai \
-  convert "https://example.com" --raw
-
-# Disable JavaScript for faster processing
-docker run --rm \
-  -v $(pwd)/output:/app/output \
-  -e URL2MD_JAVASCRIPT=false \
-  url2md4ai \
-  convert "https://static-site.com" --no-js
-```
-
-## 🛠️ Development
-
-### Setup Development Environment
-
-```bash
-# Clone repository
-git clone https://github.com/mazzasaverio/url2md4ai.git
-cd url2md4ai
-
-# Install with uv
-uv sync
-
-# Install Playwright browsers
-uv run playwright install
-
-# Run tests
-uv run pytest
-
-# Run linting
-uv run ruff check
-uv run black --check .
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-uv run pytest
-
-# Run with coverage
-uv run pytest --cov=src/url2md4ai
-
-# Run specific test
-uv run pytest tests/test_converter.py
-```
-
-## 📊 Output Format
-
-The tool generates clean, LLM-optimized markdown with:
-
-- ✅ Preserved heading structure
-- ✅ Clean link formatting
-- ✅ Removed navigation, footer, and sidebar content
-- ✅ Optimized whitespace and line breaks
-- ✅ Title and metadata preservation
-- ✅ Support for complex layouts
-
-### Example Output
-
-```markdown
-# Page Title
-
-Main content paragraph with [links](https://example.com) preserved.
-
-## Section Heading
-
-- List items preserved
-- Proper formatting maintained
-
-**Bold text** and *italic text* converted correctly.
-
-> Blockquotes maintained
-
-```code blocks preserved```
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Development Guidelines
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Code Quality
-
-- Use `black` for code formatting
-- Use `ruff` for linting
-- Add type hints for all functions
-- Write tests for new features
-- Update documentation as needed
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Trafilatura](https://trafilatura.readthedocs.io/) for intelligent content extraction and web scraping
-- [Playwright](https://playwright.dev/) for JavaScript rendering and dynamic content handling
-- [html2text](https://github.com/Alir3z4/html2text) for HTML to Markdown conversion
-- [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/) for HTML parsing and content cleaning
-- [Click](https://click.palletsprojects.com/) for the powerful CLI interface
-- [Loguru](https://github.com/Delgan/loguru) for elegant logging
 
 ## 📈 Roadmap
 

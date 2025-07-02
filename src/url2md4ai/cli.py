@@ -2,269 +2,173 @@
 
 import asyncio
 import json
+import sys
+from pathlib import Path
 from typing import Any
 
 import click
 from loguru import logger
 
-from .config import Config
-from .converter import ConversionResult, URLHasher, URLToMarkdownConverter
+from url2md4ai.config import Config
+from url2md4ai.converter import ContentExtractor
 
 
-def print_result_info(result: ConversionResult, show_metadata: bool = False) -> None:
-    """Print conversion result information."""
-    if result.success:
-        click.echo(f"✅ Successfully converted: {result.url}")
-        click.echo(f"   📁 File: {result.filename}")
-        if result.output_path:
-            click.echo(f"   💾 Saved to: {result.output_path}")
-        click.echo(f"   📊 Size: {len(result.markdown):,} characters")
+def _setup_logging(debug: bool = False) -> None:
+    """Set up logging configuration."""
+    logger.remove()  # Remove default handler
+    logger.add(
+        sys.stderr,
+        level="DEBUG" if debug else "INFO",
+    )
 
-        if show_metadata:
-            metadata: dict[str, Any] = {
-                "file_size": len(result.markdown),
-                "output_path": result.output_path,
-            }
-            click.echo(f"   🔍 Metadata: {json.dumps(metadata, indent=2)}")
+
+def _process_result(result: dict[str, Any] | None, json_output: bool = False) -> None:
+    """Process and display the conversion result."""
+    if not result:
+        click.echo("❌ Error: Failed to get a result.", err=True)
+        return
+
+    if json_output:
+        click.echo(json.dumps(result, indent=2))
+    elif result.get("output_path"):
+        click.echo(f"✅ Successfully saved markdown to: {result['output_path']}")
+    elif result.get("markdown"):
+        click.echo("✅ Successfully converted to markdown:")
+        click.echo("\n" + result["markdown"])
     else:
-        click.echo(f"❌ Failed to convert: {result.url}")
-        click.echo(f"   Error: {result.error}")
+        click.echo("❌ Error: No markdown content found.", err=True)
 
 
 @click.group()
 @click.option(
-    "--output-dir",
-    type=click.Path(),
-    help="Output directory for markdown files",
+    "--debug",
+    is_flag=True,
+    help="Enable debug logging",
 )
-@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
-@click.pass_context
-def cli(
-    ctx: click.Context,
-    output_dir: str | None,
-    verbose: bool,
-) -> None:
-    """URL2MD4AI - Convert web pages to LLM-optimized markdown."""
-    config = Config.from_env()
+def cli(debug: bool) -> None:
+    """Convert webpage content to clean markdown format."""
+    _setup_logging(debug)
 
-    # Apply CLI overrides
+
+@cli.command()
+@click.argument("url")
+@click.option(
+    "--output-dir",
+    "-o",
+    type=click.Path(file_okay=False, path_type=Path),
+    help="Directory to save the markdown file",
+)
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    help="Output result as JSON",
+)
+@click.option(
+    "--no-save",
+    is_flag=True,
+    help="Don't save to file, just print the markdown",
+)
+def convert(
+    url: str,
+    output_dir: Path | None,
+    json_output: bool,
+    no_save: bool,
+) -> None:
+    """Convert a webpage to markdown.
+
+    URL: The URL of the webpage to convert
+    """
+    config = Config()
     if output_dir:
         config.output_dir = str(output_dir)
 
-    if verbose:
-        logger.remove()
-        logger.add(
-            lambda msg: click.echo(msg, err=True),
-            level="DEBUG",
-            format="<level>{level}</level> | {message}",
-        )
-
-    ctx.ensure_object(dict)
-    ctx.obj = config
+    extractor = ContentExtractor(config)
+    result = asyncio.run(extractor.extract_markdown(url, save_to_file=not no_save))
+    _process_result(result, json_output)
 
 
-@click.command()
+@cli.command()
 @click.argument("url")
-@click.option("--output", "-o", help="Output filename (optional)")
-@click.option("--show-metadata", is_flag=True, help="Show conversion metadata")
-@click.option("--show-content", is_flag=True, help="Show extracted content")
-@click.pass_context
-def convert(
-    ctx: click.Context,
-    url: str,
-    output: str | None,
-    show_metadata: bool,
-    show_content: bool,
-) -> None:
-    """Convert a single URL to markdown."""
-
-    async def async_convert() -> None:
-        config = ctx.obj
-        converter = URLToMarkdownConverter(config)
-
-        try:
-            if show_metadata:
-                click.echo("🔄 Converting URL to markdown...")
-
-            result = await converter.convert_url(url, output_path=output)
-
-            if result.success:
-                if show_metadata:
-                    click.echo("✅ Conversion successful!")
-                    click.echo(f"📁 File: {result.output_path}")
-                    click.echo(f"📊 Size: {len(result.markdown)} chars")
-
-                if show_content and result.markdown:
-                    click.echo("\n" + "=" * 50)
-                    click.echo("EXTRACTED CONTENT:")
-                    click.echo("=" * 50)
-                    click.echo(result.markdown)
-
-                if not show_metadata and not show_content:
-                    click.echo(f"✅ Converted: {result.output_path}")
-            else:
-                click.echo(f"❌ Conversion failed: {result.error}")
-                raise click.Abort from None
-
-        except Exception as e:
-            click.echo(f"❌ Conversion failed: {e}")
-            raise click.Abort from e
-
-    return asyncio.run(async_convert())
-
-
-@click.command()
-@click.argument("urls", nargs=-1, required=True)
-@click.option("--concurrency", "-c", default=3, help="Number of parallel conversions")
 @click.option(
-    "--continue-on-error",
+    "--json",
+    "json_output",
     is_flag=True,
-    help="Continue processing even if some URLs fail",
+    help="Output result as JSON",
 )
-@click.option("--show-progress", is_flag=True, help="Show progress information")
-@click.pass_context
-def batch(
-    ctx: click.Context,
-    urls: list[str],
-    concurrency: int,
-    continue_on_error: bool,
-    show_progress: bool,
+def extract_html(url: str, json_output: bool) -> None:
+    """Extract raw HTML from a webpage.
+
+    URL: The URL of the webpage to extract HTML from
+    """
+    extractor = ContentExtractor()
+    result = extractor.extract_html_sync(url)
+    if result:
+        if json_output:
+            click.echo(json.dumps({"url": url, "html_content": result}))
+        else:
+            click.echo(result)
+    else:
+        click.echo("❌ Error: Failed to extract HTML.", err=True)
+
+
+@cli.command()
+@click.argument(
+    "html_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+@click.option(
+    "--output-dir",
+    "-o",
+    type=click.Path(file_okay=False, path_type=Path),
+    help="Directory to save the markdown file",
+)
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    help="Output result as JSON",
+)
+@click.option(
+    "--no-save",
+    is_flag=True,
+    help="Don't save to file, just print the markdown",
+)
+@click.option(
+    "--url",
+    help="Original URL of the HTML content (optional)",
+)
+def convert_html(
+    html_file: Path,
+    output_dir: Path | None,
+    json_output: bool,
+    no_save: bool,
+    url: str | None,
 ) -> None:
-    """Convert multiple URLs to markdown with parallel processing."""
+    """Convert a local HTML file to markdown.
 
-    async def async_batch() -> None:
-        config = ctx.obj
-        converter = URLToMarkdownConverter(config)
+    HTML_FILE: Path to the HTML file to convert
+    """
+    config = Config()
+    if output_dir:
+        config.output_dir = str(output_dir)
 
-        if show_progress:
-            click.echo(f"🚀 Processing {len(urls)} URLs with {concurrency} workers...")
+    try:
+        with open(html_file, encoding="utf-8") as f:
+            html_content = f.read()
+    except Exception as e:
+        logger.error(f"Failed to read HTML file: {e}")
+        sys.exit(1)
 
-        # Create semaphore for concurrency control
-        semaphore = asyncio.Semaphore(concurrency)
-
-        async def convert_single(url: str) -> object | None:
-            async with semaphore:
-                try:
-                    return await converter.convert_url(url)
-                except Exception as e:
-                    if continue_on_error:
-                        if show_progress:
-                            click.echo(f"⚠️  Failed {url}: {e}")
-                        return None
-                    raise
-
-        # Process all URLs concurrently
-        tasks = [convert_single(url) for url in urls]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        # Report results
-        success_count = 0
-        error_count = 0
-
-        for result in results:
-            if isinstance(result, Exception):
-                error_count += 1
-                if show_progress:
-                    click.echo(f"❌ Error: {result}")
-            elif result is None:
-                error_count += 1
-            elif isinstance(result, ConversionResult):
-                if result.success:
-                    success_count += 1
-                    if show_progress:
-                        click.echo(f"✅ Converted: {result.url}")
-                else:
-                    error_count += 1
-                    if show_progress:
-                        click.echo(f"❌ Failed: {result.url} - {result.error}")
-
-        # Print summary
-        total = len(urls)
-        click.echo(
-            f"\n📊 Summary: {success_count} succeeded, {error_count} failed"
-            f" (total: {total})",
-        )
-
-        if error_count > 0 and not continue_on_error:
-            raise click.Abort
-
-    return asyncio.run(async_batch())
-
-
-@click.command()
-@click.argument("url")
-@click.option("--show-content", is_flag=True, help="Show extracted content")
-@click.option("--show-metadata", is_flag=True, help="Show conversion metadata")
-@click.pass_context
-def preview(
-    ctx: click.Context,
-    url: str,
-    show_content: bool,
-    show_metadata: bool,
-) -> None:
-    """Preview URL conversion without saving."""
-
-    async def async_preview() -> None:
-        config = ctx.obj
-        converter = URLToMarkdownConverter(config)
-
-        try:
-            result = await converter.convert_url(url)
-
-            if result.success:
-                if show_metadata:
-                    click.echo("✅ Preview successful!")
-                    click.echo(f"📊 Size: {len(result.markdown)} chars")
-
-                if show_content and result.markdown:
-                    click.echo("\n" + "=" * 50)
-                    click.echo("PREVIEW CONTENT:")
-                    click.echo("=" * 50)
-                    click.echo(result.markdown)
-
-                if not show_metadata and not show_content:
-                    click.echo("✅ Preview successful")
-            else:
-                click.echo(f"❌ Preview failed: {result.error}")
-                raise click.Abort
-
-        except Exception as e:
-            click.echo(f"❌ Preview failed: {e}")
-            raise click.Abort from e
-
-    return asyncio.run(async_preview())
-
-
-@click.command()
-@click.argument("url")
-def hash_url(url: str) -> None:
-    """Generate hash-based filename for URL."""
-    filename = URLHasher.generate_filename(url)
-    click.echo(f"URL: {url}")
-    click.echo(f"Hash: {URLHasher.generate_hash(url)}")
-    click.echo(f"Filename: {filename}")
-
-
-@click.command()
-@click.pass_context
-def config_info(ctx: click.Context) -> None:
-    """Show current configuration."""
-    config = ctx.obj
-    click.echo("Current Configuration:")
-    click.echo("-" * 20)
-    for key, value in config.to_dict().items():
-        click.echo(f"{key}: {value}")
-
-
-def main() -> None:
-    """Main entry point."""
-    cli.add_command(convert)
-    cli.add_command(batch)
-    cli.add_command(preview)
-    cli.add_command(hash_url)
-    cli.add_command(config_info)
-    cli()
+    url = url or f"file://{html_file.absolute()}"
+    extractor = ContentExtractor(config)
+    result = extractor.extract_markdown_sync(
+        url,
+        html_content=html_content,
+        save_to_file=not no_save,
+    )
+    _process_result(result, json_output)
 
 
 if __name__ == "__main__":
-    main()
+    cli()

@@ -4,12 +4,9 @@ import hashlib
 import threading
 import time
 from collections import deque
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from .logger import get_logger
-
-if TYPE_CHECKING:
-    from ..converter import ConversionResult
 
 
 class RateLimiter:
@@ -141,42 +138,6 @@ class SimpleCache:
         with self.lock:
             self.cache[key] = (result, time.time())
             self.logger.debug(f"Cached result for key: {key[:16]}...")
-
-    def get_url_conversion(self, url: str) -> "ConversionResult | None":
-        """Get cached URL conversion result if available and not expired.
-
-        Args:
-            url: URL to check for cached conversion
-
-        Returns:
-            Cached ConversionResult or None if not found/expired
-        """
-        key = self._generate_url_key(url)
-
-        with self.lock:
-            if key in self.cache:
-                result, timestamp = self.cache[key]
-                if time.time() - timestamp < self.ttl_seconds:
-                    self.logger.debug(f"Cache hit for URL: {url}")
-                    return cast("ConversionResult", result)
-                # Expired, remove it
-                del self.cache[key]
-                self.logger.debug(f"Cache expired for URL: {url}")
-
-        return None
-
-    def set_url_conversion(self, url: str, result: "ConversionResult") -> None:
-        """Store URL conversion result in cache.
-
-        Args:
-            url: URL that was converted
-            result: ConversionResult to cache
-        """
-        key = self._generate_url_key(url)
-
-        with self.lock:
-            self.cache[key] = (result, time.time())
-            self.logger.debug(f"Cached conversion result for URL: {url}")
 
     def clear_expired(self) -> int:
         """Clear expired entries from cache.

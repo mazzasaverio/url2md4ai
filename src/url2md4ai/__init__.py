@@ -6,10 +6,13 @@ Supports dynamic content rendering with JavaScript and generates unique filename
 based on URL hashes.
 """
 
-__version__ = "0.0.4"
+__version__ = "0.1.0"
 
-from .config import Config
-from .converter import ConversionResult, URLHasher, URLToMarkdownConverter
+from url2md4ai.config import Config
+from url2md4ai.converter import (
+    ContentExtractor,
+)
+
 from .utils import (
     get_logger,
     setup_logger,
@@ -17,9 +20,7 @@ from .utils import (
 
 __all__ = [
     "Config",
-    "ConversionResult",
-    "URLHasher",
-    "URLToMarkdownConverter",
+    "ContentExtractor",
     "get_logger",
     "setup_logger",
 ]

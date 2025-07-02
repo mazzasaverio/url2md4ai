@@ -6,7 +6,7 @@ Supports dynamic content rendering with JavaScript and generates unique filename
 based on URL hashes.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from url2md4ai.config import Config
 from url2md4ai.converter import (

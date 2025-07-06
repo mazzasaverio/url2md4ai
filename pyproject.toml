@@ -46,6 +46,8 @@ dependencies = [
     "lxml>=5.0.0",
     "trafilatura>=1.6.1",
     "openai>=1.93.0",
+    "pandas>=2.3.0",
+    "tabulate>=0.9.0",
 ]
 
 [project.optional-dependencies]

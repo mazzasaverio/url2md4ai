@@ -23,7 +23,9 @@ class TestContentExtractor:
         filename = extractor.generate_filename(url)
         assert isinstance(filename, str)
         assert filename.endswith(".md")
-        assert len(filename) == 19  # 16 chars hash + 3 chars extension
+        # Format: YYYYMMDD-hash.md (8 + 1 + 16 + 3 = 28 chars)
+        assert len(filename) == 28
+        assert filename[8] == "-"  # date separator
 
     @pytest.mark.asyncio
     async def test_extract_html_success(self, extractor, mocker):

@@ -1,7 +1,7 @@
 """Configuration management for url2md4ai."""
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -53,6 +53,9 @@ class Config:
     # Logging settings
     log_level: str = "INFO"
     log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    # Post-processing settings
+    drop_phrases: list[str] = field(default_factory=list)
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -107,6 +110,12 @@ class Config:
             log_format=os.getenv(
                 "URL2MD_LOG_FORMAT",
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            ),
+            # Post-processing settings
+            drop_phrases=(
+                os.getenv("URL2MD_DROP_PHRASES", "").split("||")
+                if os.getenv("URL2MD_DROP_PHRASES")
+                else []
             ),
         )
 

@@ -21,7 +21,7 @@ def test_article_end_to_end(serve_fixture):
 def test_tables_survive(serve_fixture):
     md = to_markdown(serve_fixture("tables.html"))
     assert "| 404 | Not Found |" in md
-    assert "4xx — client errors" in md
+    assert "4xx: client errors" in md
 
 
 def test_image_alt_text_survives(serve_fixture):

@@ -34,7 +34,7 @@ def render_page(url: str, *, timeout: float, user_agent: str | None = None) -> s
         from playwright.sync_api import TimeoutError as PlaywrightTimeout
         from playwright.sync_api import sync_playwright
     except ImportError as exc:
-        raise FetchError(f"JavaScript rendering is not available — {INSTALL_HINT}") from exc
+        raise FetchError(f"JavaScript rendering is not available: {INSTALL_HINT}") from exc
 
     try:
         with sync_playwright() as p:

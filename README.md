@@ -7,7 +7,7 @@ uv tool install url2md4ai   # or: pip install url2md4ai
 url2md4ai https://en.wikipedia.org/wiki/Markdown
 ```
 
-Feed web pages to an LLM without paying for navigation menus, cookie banners, ads and scripts. url2md4ai fetches a page, extracts the main content and emits structured Markdown — headings, text, tables, lists, code blocks, image alt text — typically cutting raw page size by more than 90%.
+Feed web pages to an LLM without paying for navigation menus, cookie banners, ads and scripts. url2md4ai fetches a page, extracts the main content and emits structured Markdown (headings, text, tables, lists, code blocks, image alt text), typically cutting raw page size by more than 90%.
 
 ```markdown
 ---
@@ -61,7 +61,7 @@ md = to_markdown("https://example.com/article", include_links=False, timeout=30)
 md = html_to_markdown(html, base_url="https://example.com/article")
 ```
 
-Errors are explicit and typed: `FetchError` (network / HTTP status), `UnsupportedContentError` (PDF, images, JSON...), `ExtractionError` (empty or paywalled pages) — all subclasses of `Url2md4aiError`.
+Errors are explicit and typed: `FetchError` (network / HTTP status), `UnsupportedContentError` (PDF, images, JSON...), `ExtractionError` (empty or paywalled pages), all subclasses of `Url2md4aiError`.
 
 ## JavaScript pages
 
@@ -78,9 +78,9 @@ playwright install chromium
 
 ## How it works
 
-1. **Fetch** — plain HTTP GET (httpx, redirects followed, 10 MB cap). Markdown and plain-text responses are returned as-is; PDFs and other binaries fail fast with a clear error.
-2. **Extract** — [trafilatura](https://github.com/adbar/trafilatura), precision-first. If precision mode finds too little it retries favoring recall, then reads the page's JSON-LD structured data (many JavaScript-heavy sites ship their content there for SEO), then optionally renders JavaScript, then falls back to whole-page text before giving up.
-3. **Post-process** — whitespace normalization, decorative images without alt text dropped, optional link stripping, YAML frontmatter (`title`, `source`, `fetched`).
+1. **Fetch**: plain HTTP GET (httpx, redirects followed, 10 MB cap). Markdown and plain-text responses are returned as-is; PDFs and other binaries fail fast with a clear error.
+2. **Extract**: [trafilatura](https://github.com/adbar/trafilatura), precision-first. If precision mode finds too little it retries favoring recall, then reads the page's JSON-LD structured data (many JavaScript-heavy sites ship their content there for SEO), then optionally renders JavaScript, then falls back to whole-page text before giving up.
+3. **Post-process**: whitespace normalization, decorative images without alt text dropped, optional link stripping, YAML frontmatter (`title`, `source`, `fetched`).
 
 ## Philosophy
 

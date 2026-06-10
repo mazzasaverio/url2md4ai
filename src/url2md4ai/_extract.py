@@ -60,7 +60,7 @@ def extract_markdown(
         return result.strip(), "baseline"
 
     raise ExtractionError(
-        "no extractable content — the page may be empty, paywalled, or require JavaScript rendering"
+        "no extractable content: the page may be empty, paywalled, or require JavaScript rendering"
     )
 
 

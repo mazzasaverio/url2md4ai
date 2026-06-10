@@ -1,4 +1,4 @@
-"""url2md4ai — convert any URL into clean, token-efficient Markdown for LLMs.
+"""url2md4ai: convert any URL into clean, token-efficient Markdown for LLMs.
 
 Public API: :func:`to_markdown`, :func:`html_to_markdown` and the exceptions.
 Everything else is private.

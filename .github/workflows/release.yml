@@ -8,7 +8,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write # OIDC for PyPI trusted publishing — no token needed
+      id-token: write # OIDC for PyPI trusted publishing, no token needed
       contents: read
     steps:
       - uses: actions/checkout@v4

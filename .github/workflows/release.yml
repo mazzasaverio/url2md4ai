@@ -1,0 +1,20 @@
+name: Release to PyPI
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # OIDC for PyPI trusted publishing — no token needed
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-extras
+      - run: uv run pytest
+      - run: uv run ruff check
+      - run: uv build
+      - run: uv publish --trusted-publishing always

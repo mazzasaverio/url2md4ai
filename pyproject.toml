@@ -1,6 +1,6 @@
 [project]
 name = "url2md4ai"
-version = "2.0.0"
+version = "2.1.0"
 description = "Convert any URL into clean, token-efficient Markdown for LLMs. One thing, done well."
 readme = "README.md"
 license = "MIT"

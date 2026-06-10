@@ -5,6 +5,7 @@ import re
 
 # [text](url) but not ![alt](src): images carry information, link URLs often don't.
 _LINK_RE = re.compile(r"(?<!\!)\[([^\]]+)\]\([^)]*\)")
+_EMPTY_IMAGE_RE = re.compile(r"!\[\s*\]\([^)]*\)")
 _TRAILING_WS_RE = re.compile(r"[ \t]+$", flags=re.MULTILINE)
 _EXTRA_NEWLINES_RE = re.compile(r"\n{3,}")
 
@@ -12,6 +13,11 @@ _EXTRA_NEWLINES_RE = re.compile(r"\n{3,}")
 def strip_links(markdown: str) -> str:
     """Replace ``[text](url)`` with ``text``, preserving images."""
     return _LINK_RE.sub(r"\1", markdown)
+
+
+def strip_empty_images(markdown: str) -> str:
+    """Drop ``![](src)`` images: without alt text they cost tokens and inform nothing."""
+    return _EMPTY_IMAGE_RE.sub("", markdown)
 
 
 def normalize_whitespace(markdown: str) -> str:

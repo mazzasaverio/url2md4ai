@@ -21,5 +21,13 @@ def test_js_only_page_raises():
         extract_markdown(load_fixture("js_only.html"))
 
 
+def test_spa_with_jsonld_falls_back_to_structured_data():
+    markdown, strategy = extract_markdown(load_fixture("jsonld_spa.html"))
+    assert strategy == "jsonld"
+    assert "# Backend Engineer" in markdown
+    assert "ingestion services" in markdown
+    assert "<h2>" not in markdown  # HTML in the description is converted
+
+
 def test_title_extraction():
     assert extract_title(load_fixture("article.html")) == "Designing Resilient Data Pipelines"

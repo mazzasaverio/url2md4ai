@@ -14,9 +14,14 @@ from ._exceptions import (
 )
 from ._extract import extract_markdown, extract_title
 from ._fetch import DEFAULT_TIMEOUT, fetch_page
-from ._postprocess import build_frontmatter, normalize_whitespace, strip_links
+from ._postprocess import (
+    build_frontmatter,
+    normalize_whitespace,
+    strip_empty_images,
+    strip_links,
+)
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 __all__ = [
     "ExtractionError",
@@ -103,6 +108,7 @@ def _header(enabled: bool, *, title: str | None, source: str) -> str:
 
 
 def _finalize(markdown: str, *, include_links: bool, header: str) -> str:
+    markdown = strip_empty_images(markdown)
     if not include_links:
         markdown = strip_links(markdown)
     return header + normalize_whitespace(markdown)

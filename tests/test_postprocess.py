@@ -2,7 +2,12 @@
 
 import datetime
 
-from url2md4ai._postprocess import build_frontmatter, normalize_whitespace, strip_links
+from url2md4ai._postprocess import (
+    build_frontmatter,
+    normalize_whitespace,
+    strip_empty_images,
+    strip_links,
+)
 
 
 def test_strip_links_keeps_text():
@@ -12,6 +17,11 @@ def test_strip_links_keeps_text():
 def test_strip_links_preserves_images():
     md = "![a lake](img.jpg) and [a link](https://x.example)"
     assert strip_links(md) == "![a lake](img.jpg) and a link"
+
+
+def test_strip_empty_images_keeps_informative_ones():
+    md = "![](decor.jpg) text ![a lake at dawn](lake.jpg)"
+    assert strip_empty_images(md) == " text ![a lake at dawn](lake.jpg)"
 
 
 def test_normalize_whitespace():

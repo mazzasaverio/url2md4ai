@@ -76,8 +76,8 @@ Errors are explicit and typed: `FetchError` (network / HTTP status), `Unsupporte
 ## How it works
 
 1. **Fetch** — plain HTTP GET (httpx, redirects followed, 10 MB cap). Markdown/plain-text responses are returned as-is; PDFs and other binaries fail fast with a clear error.
-2. **Extract** — [trafilatura](https://github.com/adbar/trafilatura), precision-first: best-in-class boilerplate removal in independent benchmarks. If precision mode finds too little, it retries favoring recall, then falls back to whole-page text before giving up.
-3. **Post-process** — whitespace normalization, optional link stripping (images and alt text always survive), YAML frontmatter (`title`, `source`, `fetched`).
+2. **Extract** — [trafilatura](https://github.com/adbar/trafilatura), precision-first: best-in-class boilerplate removal in independent benchmarks. If precision mode finds too little, it retries favoring recall, then reads the page's JSON-LD structured data (many SPAs — job boards, e-commerce — ship their content there for SEO), then falls back to whole-page text before giving up.
+3. **Post-process** — whitespace normalization, decorative images without alt text dropped, optional link stripping (informative images and alt text always survive), YAML frontmatter (`title`, `source`, `fetched`).
 
 ## Philosophy
 

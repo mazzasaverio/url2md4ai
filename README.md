@@ -51,6 +51,8 @@ The server exposes a single tool: `url_to_markdown(url, include_links=true, rend
 
 ## Python library
 
+Add it to your project with `uv add url2md4ai` (or `pip install url2md4ai`):
+
 ```python
 from url2md4ai import to_markdown, html_to_markdown
 

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Designing Resilient Data Pipelines</title>
+  <meta name="description" content="Lessons learned building data pipelines that survive failure.">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">Home</a> <a href="/blog">Blog</a> <a href="/about">About</a>
+      <a href="/pricing">Pricing</a> <a href="/login">Sign in</a>
+    </nav>
+  </header>
+  <main>
+    <article>
+      <h1>Designing Resilient Data Pipelines</h1>
+      <p>Every data pipeline eventually fails. The network partitions, the upstream API changes
+      its schema without warning, a disk fills up at three in the morning. The difference between
+      a pipeline you can trust and one you babysit is not whether it fails, but how it behaves
+      when it does. This article collects the patterns that kept our ingestion layer boring for
+      three years.</p>
+      <h2>Idempotency first</h2>
+      <p>The single most valuable property a pipeline stage can have is idempotency. If every
+      stage can be re-run safely, then recovery from any failure reduces to one operation: run it
+      again. We enforce this by keying every write on a deterministic identifier derived from the
+      source record, never on auto-increment counters or wall-clock timestamps.</p>
+      <pre><code>def ingest(record: Record) -> None:
+    key = sha256(record.source_id)
+    store.upsert(key, record)</code></pre>
+      <h2>Backpressure beats buffering</h2>
+      <p>When a downstream system slows, the worst response is to buffer indefinitely. Unbounded
+      queues turn a latency problem into a memory problem and then into an outage. We cap every
+      queue and propagate the slowdown upstream, letting the source throttle itself. The pipeline
+      degrades gracefully instead of collapsing suddenly.</p>
+      <p>None of these patterns are novel, and that is the point. Boring techniques, applied
+      consistently, are what resilience actually looks like in production.</p>
+    </article>
+  </main>
+  <footer>
+    <p>© 2026 Example Corp. All rights reserved. <a href="/privacy">Privacy policy</a>
+    <a href="/terms">Terms of service</a></p>
+    <p>Subscribe to our newsletter for weekly updates!</p>
+  </footer>
+</body>
+</html>

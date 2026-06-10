@@ -1,94 +1,50 @@
-"""Pytest configuration and fixtures."""
+"""Shared test helpers: fixture loading and the offline HTTP transport seam."""
 
-import os
-from unittest.mock import patch
+from pathlib import Path
 
+import httpx
 import pytest
 
+import url2md4ai._fetch as _fetch
 
-@pytest.fixture(autouse=True)
-def setup_test_env():
-    """Setup test environment."""
-    # Set minimal required environment variables for tests
-    test_env = {
-        "OPENAI_API_KEY": "sk-test123456789abcdef",
-        "LOG_LEVEL": "WARNING",  # Reduce noise in tests
-    }
+FIXTURES = Path(__file__).parent / "fixtures"
 
-    with patch.dict(os.environ, test_env):
-        yield
+
+def load_fixture(name: str) -> bytes:
+    return (FIXTURES / name).read_bytes()
 
 
 @pytest.fixture
-def sample_recipe_text():
-    """Sample recipe text for testing."""
-    return """
-    Spaghetti Carbonara
-    
-    A classic Italian pasta dish.
-    
-    Ingredients:
-    - 400g spaghetti
-    - 200g guanciale or pancetta
-    - 4 large eggs
-    - 100g Pecorino Romano cheese
-    - Black pepper
-    - Salt
-    
-    Instructions:
-    1. Cook spaghetti in salted water until al dente
-    2. Fry guanciale until crispy
-    3. Beat eggs with grated cheese
-    4. Combine hot pasta with guanciale
-    5. Add egg mixture off heat, stirring quickly
-    6. Season with black pepper
-    
-    Serves 4 people. Total time: 20 minutes.
+def serve(monkeypatch):
+    """Route HTTP requests to canned responses, with no network access.
+
+    Usage: ``serve({url: (status, content_type, body)})``. Unknown URLs get 404.
     """
+
+    def _serve(routes: dict[str, tuple[int, str, bytes | str]]) -> None:
+        def handler(request: httpx.Request) -> httpx.Response:
+            route = routes.get(str(request.url))
+            if route is None:
+                return httpx.Response(404)
+            status, content_type, body = route
+            return httpx.Response(
+                status,
+                headers={"content-type": content_type},
+                content=body.encode() if isinstance(body, str) else body,
+            )
+
+        monkeypatch.setattr(_fetch, "_transport", httpx.MockTransport(handler))
+
+    return _serve
 
 
 @pytest.fixture
-def sample_job_text():
-    """Sample job description text for testing."""
-    return """
-    Senior Python Developer
-    
-    We are looking for an experienced Python developer to join our team.
-    
-    Company: Tech Innovations Inc.
-    Location: San Francisco, CA (Remote friendly)
-    
-    Requirements:
-    - 5+ years of Python experience
-    - Experience with Django/Flask
-    - Knowledge of AWS/Docker
-    - Strong problem-solving skills
-    
-    Responsibilities:
-    - Develop backend services
-    - Mentor junior developers
-    - Code reviews and testing
-    
-    Benefits:
-    - Competitive salary ($120k-160k)
-    - Health insurance
-    - Stock options
-    - Flexible working hours
-    """
+def serve_fixture(serve):
+    """Serve a fixture file at a URL: ``url = serve_fixture("article.html")``."""
 
+    def _serve_fixture(name: str, content_type: str = "text/html") -> str:
+        url = f"https://test.example/{name}"
+        serve({url: (200, content_type, load_fixture(name))})
+        return url
 
-@pytest.fixture
-def sample_news_text():
-    """Sample news article text for testing."""
-    return """
-    Breaking: Apple Unveils Revolutionary iPhone 15 Pro
-    
-    CUPERTINO, Calif. - Apple Inc. today announced the highly anticipated iPhone 15 Pro,
-    featuring groundbreaking titanium design and advanced AI capabilities. CEO Tim Cook
-    presented the device at Apple Park, highlighting its improved camera system and
-    extended battery life.
-    
-    The new device, starting at $999, will be available for pre-order this Friday.
-    Industry analysts predict strong sales, with some calling it "the most significant
-    iPhone upgrade in years."
-    """
+    return _serve_fixture

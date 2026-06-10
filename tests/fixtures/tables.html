@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>HTTP Status Codes Reference</title></head>
+<body>
+  <nav><a href="/">Home</a> <a href="/reference">Reference</a></nav>
+  <main>
+    <article>
+      <h1>HTTP Status Codes Reference</h1>
+      <p>HTTP status codes are issued by a server in response to a client request. They are
+      grouped into five classes by their first digit. The table below lists the codes you will
+      meet most often when debugging web applications, together with their meaning and the
+      typical situations that produce them.</p>
+      <table>
+        <thead>
+          <tr><th>Code</th><th>Name</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>200</td><td>OK</td><td>The request succeeded</td></tr>
+          <tr><td>301</td><td>Moved Permanently</td><td>The resource has a new permanent URL</td></tr>
+          <tr><td>403</td><td>Forbidden</td><td>The server refuses to authorize the request</td></tr>
+          <tr><td>404</td><td>Not Found</td><td>The resource does not exist</td></tr>
+          <tr><td>503</td><td>Service Unavailable</td><td>The server is temporarily overloaded</td></tr>
+        </tbody>
+      </table>
+      <h2>Classes at a glance</h2>
+      <ul>
+        <li>1xx — informational responses</li>
+        <li>2xx — success</li>
+        <li>3xx — redirection</li>
+        <li>4xx — client errors</li>
+        <li>5xx — server errors</li>
+      </ul>
+      <p>When in doubt, remember that 4xx means the client should change something about the
+      request, while 5xx means the server failed to fulfil a valid request.</p>
+    </article>
+  </main>
+  <footer><p>© 2026 Example Corp.</p></footer>
+</body>
+</html>

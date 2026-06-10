@@ -25,6 +25,7 @@ dependencies = [
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.0"]
+js = ["playwright>=1.50"]
 
 [project.urls]
 Repository = "https://github.com/mazzasaverio/url2md4ai"

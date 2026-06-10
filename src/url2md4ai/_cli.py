@@ -28,12 +28,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--raw", action="store_true", help="raw extractor output, no post-processing (debugging)"
     )
+    render_group = parser.add_mutually_exclusive_group()
+    render_group.add_argument(
+        "--render",
+        action="store_true",
+        help="always render JavaScript before extracting (requires the js extra)",
+    )
+    render_group.add_argument(
+        "--no-render",
+        action="store_true",
+        help="never fall back to JavaScript rendering",
+    )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="print the extraction strategy on stderr"
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args(argv)
 
+    render = "force" if args.render else ("never" if args.no_render else "auto")
     try:
         if args.raw:
             markdown, strategy = _convert_raw(args.url, args.timeout, args.user_agent)
@@ -44,6 +56,7 @@ def main(argv: list[str] | None = None) -> int:
                 frontmatter=not args.no_frontmatter,
                 timeout=args.timeout,
                 user_agent=args.user_agent,
+                render=render,
             )
     except Url2md4aiError as exc:
         print(f"url2md4ai: error: {exc}", file=sys.stderr)

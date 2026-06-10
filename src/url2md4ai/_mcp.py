@@ -19,14 +19,16 @@ def _build_server():
     server = FastMCP("url2md4ai")
 
     @server.tool()
-    def url_to_markdown(url: str, include_links: bool = True) -> str:
+    def url_to_markdown(url: str, include_links: bool = True, render: bool = False) -> str:
         """Convert any web page URL to clean, token-efficient Markdown.
 
         Returns the main content of the page (headings, text, tables, lists,
         code blocks, image alt text) with navigation, ads and other boilerplate
         removed. Set include_links=false to also drop link URLs and save tokens.
+        Set render=true to force JavaScript rendering, e.g. when the result
+        misses content that the page loads client-side.
         """
-        return to_markdown(url, include_links=include_links)
+        return to_markdown(url, include_links=include_links, render="force" if render else "auto")
 
     return server
 

@@ -1,5 +1,11 @@
 # url2md4ai
 
+[![PyPI version](https://img.shields.io/pypi/v/url2md4ai)](https://pypi.org/project/url2md4ai/)
+[![Python versions](https://img.shields.io/pypi/pyversions/url2md4ai)](https://pypi.org/project/url2md4ai/)
+[![CI](https://img.shields.io/github/actions/workflow/status/mazzasaverio/url2md4ai/ci.yml?branch=master)](https://github.com/mazzasaverio/url2md4ai/actions/workflows/ci.yml)
+[![Downloads](https://static.pepy.tech/badge/url2md4ai/month)](https://pepy.tech/project/url2md4ai)
+[![License: MIT](https://img.shields.io/pypi/l/url2md4ai)](LICENSE)
+
 Convert any URL into clean, token-efficient Markdown for LLMs.
 
 ```bash
